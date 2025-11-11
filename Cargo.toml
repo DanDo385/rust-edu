@@ -1,0 +1,36 @@
+[workspace]
+members = [
+    "01-variables-types",
+    "02-ownership-borrowing",
+    "03-collections-basics",
+    "04-structs-methods",
+    "05-error-handling",
+    "06-traits-basics",
+    "07-sha256-hashing",
+    "08-merkle-tree",
+    "09-simple-blockchain",
+    "10-transaction-validation",
+]
+
+resolver = "2"
+
+[workspace.package]
+edition = "2021"
+rust-version = "1.75"
+authors = ["Rust Learner"]
+license = "MIT"
+
+[workspace.dependencies]
+# NOTE: This repository uses only the Rust standard library (std)
+# No external dependencies needed - perfect for offline learning!
+#
+# For blockchain projects (07-10), we use:
+# - Manual SHA-256 implementation (educational)
+# - Manual hex encoding (simple to understand)
+# - Simplified crypto demonstrations
+#
+# In production, you would use:
+# - sha2 crate for SHA-256
+# - hex crate for encoding
+# - ed25519-dalek for signatures
+# - But we implement basics ourselves for learning!
