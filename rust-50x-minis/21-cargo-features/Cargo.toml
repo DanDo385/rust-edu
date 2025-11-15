@@ -1,0 +1,42 @@
+[package]
+name = "cargo-features"
+version = "0.1.0"
+edition = "2021"
+
+# Define optional features
+[features]
+# Default features are enabled automatically
+default = ["json"]
+
+# JSON serialization support
+# The "dep:" prefix indicates this is an optional dependency
+json = ["dep:serde", "dep:serde_json"]
+
+# XML serialization support
+xml = ["dep:quick-xml"]
+
+# Logging support (useful for debugging)
+logging = ["dep:env_logger", "dep:log"]
+
+# All features (useful for testing)
+full = ["json", "xml", "logging"]
+
+# Optional dependencies - only included when features are enabled
+[dependencies]
+serde = { version = "1.0", features = ["derive"], optional = true }
+serde_json = { version = "1.0", optional = true }
+quick-xml = { version = "0.31", features = ["serialize"], optional = true }
+log = { version = "0.4", optional = true }
+env_logger = { version = "0.11", optional = true }
+
+# Regular dependencies (always included)
+colored = "2.1"
+
+# Different optimization profiles
+[profile.dev]
+opt-level = 0      # No optimization (fast compilation)
+
+[profile.release]
+opt-level = 3      # Maximum optimization
+lto = true         # Link-time optimization (slower build, faster runtime)
+codegen-units = 1  # Better optimization but slower compilation
