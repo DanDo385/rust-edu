@@ -293,7 +293,9 @@ fn main() {
     println!("  5 * 3 = {}", calculate!(multiply 5, 3));
     println!("  2 ^ 10 = {}", calculate!(power 2, 10));
 
-    println!("\n" + &"=".repeat(60) + "\n");
+    println!("
+{}
+", "=".repeat(60));
 
     // Example 2: Macros with repetition
     println!("2. Macros with Repetition");
@@ -308,7 +310,9 @@ fn main() {
     println!("\n  Debug variables:");
     debug_vars!(x, y, z);
 
-    println!("\n" + &"=".repeat(60) + "\n");
+    println!("
+{}
+", "=".repeat(60));
 
     // Example 3: HashMap initialization
     println!("3. HashMap Initialization Macro");
@@ -326,7 +330,9 @@ fn main() {
     };
     println!("  Config: {:?}", config_map);
 
-    println!("\n" + &"=".repeat(60) + "\n");
+    println!("
+{}
+", "=".repeat(60));
 
     // Example 4: Configuration DSL
     println!("4. Configuration DSL");
@@ -342,7 +348,9 @@ fn main() {
     let server = ServerConfig::new();
     println!("  Default server config: {:?}", server);
 
-    println!("\n" + &"=".repeat(60) + "\n");
+    println!("
+{}
+", "=".repeat(60));
 
     // Example 5: String enum
     println!("5. Enum with String Conversion");
@@ -364,7 +372,9 @@ fn main() {
         println!("  Parsed 'Green': {} = {}", parsed.to_string(), parsed == Color::Green);
     }
 
-    println!("\n" + &"=".repeat(60) + "\n");
+    println!("
+{}
+", "=".repeat(60));
 
     // Example 6: Timing macro
     println!("6. Timing Macro");
@@ -380,7 +390,9 @@ fn main() {
         println!("  Sum of 1..=1000 = {}", sum);
     });
 
-    println!("\n" + &"=".repeat(60) + "\n");
+    println!("
+{}
+", "=".repeat(60));
 
     // Example 7: Custom assert
     println!("7. Custom Assert Macro");
@@ -396,7 +408,9 @@ fn main() {
     // This would panic:
     // assert_between!(150, 0, 100);
 
-    println!("\n" + &"=".repeat(60) + "\n");
+    println!("
+{}
+", "=".repeat(60));
 
     // Example 8: TT Muncher (counting)
     println!("8. Token Counting (TT Muncher)");
@@ -407,7 +421,9 @@ fn main() {
     let count2 = count_tokens!(1 + 2 + 3);
     println!("  count_tokens!(1 + 2 + 3) = {}", count2);
 
-    println!("\n" + &"=".repeat(60) + "\n");
+    println!("
+{}
+", "=".repeat(60));
 
     // Example 9: Internal rules
     println!("9. Macro with Internal Rules");
@@ -415,7 +431,9 @@ fn main() {
     let sum1 = fancy_sum!(1, 2, 3, 4, 5);
     println!("  fancy_sum!(1, 2, 3, 4, 5) = {}", sum1);
 
-    println!("\n" + &"=".repeat(60) + "\n");
+    println!("
+{}
+", "=".repeat(60));
 
     // Example 10: Macro expansion demonstration
     println!("10. Understanding Macro Expansion");
