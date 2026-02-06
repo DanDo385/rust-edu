@@ -1,0 +1,230 @@
+# Lab NN - [Topic Name]
+
+## What You're Building (Plain English)
+
+[2-3 sentences explaining in simple terms what this lab is about. Avoid jargon.]
+
+Think of this as [analogy to understand it]. You'll [main action] so you can [goal].
+
+## New Rust Concepts in This Lab
+
+- **[Concept 1]**: [One-sentence explanation]. Unlike [other languages], Rust [advantage].
+- **[Concept 2]**: [One-sentence explanation]. This prevents [class of bugs].
+- **[Concept 3]**: [One-sentence explanation]. [Why it matters].
+
+## Rust Syntax You'll See
+
+```rust
+// Syntax example 1
+// Explanation: [what this does]
+let x = value;
+
+// Syntax example 2
+// Explanation: [what this does]
+let result = function(param);
+
+// Syntax example 3
+// Explanation: [what this does]
+fn name(param: Type) -> ReturnType {
+    // body
+}
+```
+
+## How to Run
+
+```bash
+# Run the main binary (executes src/main.rs)
+cargo run -p [package-name]
+
+# Run the tests (checks your implementation)
+cargo test -p [package-name]
+
+# Run tests with output visible
+cargo test -p [package-name] -- --nocapture
+
+# Check if code compiles without running
+cargo check -p [package-name]
+
+# Format your code
+cargo fmt -p [package-name]
+```
+
+## The Exercises
+
+You'll implement [N] functions:
+
+1. **function_name**: [One-line description]
+   - Learn about: [Concept 1], [Concept 2]
+   - Example: [input] → [output]
+
+2. **another_function**: [One-line description]
+   - Learn about: [Concept]
+   - Example: [input] → [output]
+
+3. **(Optional) third_function**: [Description]
+   - Learn about: [Concept]
+   - Stretch goal: [Challenge]
+
+## Solution Explanation (No Code - Just Ideas)
+
+**function_name**:
+- [Plain English explanation of approach]
+- [What Rust mechanism is used here]
+- [Why it matters]
+
+**another_function**:
+- [Explanation]
+
+## Where Rust Shines
+
+**Compared to JavaScript:**
+```javascript
+// JavaScript version
+function functionName(input) {
+    // [code]
+    return result;
+}
+
+// Issues:
+// - No type checking
+// - Unclear what types expected
+// - Can pass wrong types without error
+```
+
+**Compared to Python:**
+```python
+# Python version
+def function_name(input: Type) -> ReturnType:
+    # [code]
+    return result
+
+# Issues:
+# - Type hints are optional
+# - No compile-time checking
+# - Errors happen at runtime
+```
+
+**Rust version:**
+```rust
+pub fn function_name(input: Type) -> ReturnType {
+    // [code]
+    result
+}
+
+// Advantages:
+// - Type is mandatory and checked at compile time
+// - Impossible to pass wrong types
+// - No runtime type errors
+// - Compiler catches bugs before runtime
+```
+
+**Why this matters:**
+- [Specific advantage of Rust approach]
+- [Performance benefit]
+- [Safety benefit]
+
+## Common Beginner Mistakes & How to Avoid Them
+
+1. **[Mistake 1 Title]**
+   ```rust
+   // ❌ WRONG:
+   let x = value;  // Error: [specific error message]
+   ```
+   **Fix:** [How to fix it]
+   ```rust
+   // ✅ CORRECT:
+   let x = correct_value;
+   ```
+   **Why it happens:** [Explanation of why beginners make this mistake]
+
+2. **[Mistake 2 Title]**
+   ```rust
+   // ❌ WRONG:
+   function_with_error(param);
+   ```
+   **Fix:** [How to fix it]
+   **Why it happens:** [Explanation]
+
+3. **[Mistake 3 Title]**
+   - [Description of mistake]
+   - **Fix:** [Solution]
+   - **Why it happens:** [Explanation]
+
+## Memory Model (Optional - only if relevant)
+
+### At a High Level
+[Conceptual explanation without too much detail]
+
+### Under the Hood
+[How Rust actually manages memory for this]
+
+### In Memory Terms
+```
+Stack:                      Heap:
+┌─────────────┐
+│ variable: T │─────────▶ [actual data on heap if applicable]
+│ ptr: 0x1000 │
+│ len: 5      │
+└─────────────┘
+```
+
+## Symbol Deep Dive (Optional - only if relevant)
+
+### The `&` Symbol (Borrow Operator)
+- **What it means**: Take a reference, not ownership
+- **In this context**: [How it's used in this lab]
+- **Example**: `&String` means "borrowed String"
+- **Common misconception**: [What people get wrong]
+
+### The `mut` Keyword
+- **What it means**: Make a variable mutable (changeable)
+- **In this context**: [How it's used]
+- **Example**: `let mut x = 5;`
+- **Common misconception**: [What people get wrong]
+
+### The `->` Operator
+- **What it means**: "returns this type"
+- **In this context**: Specifies return type of functions
+- **Example**: `fn add(a: i32, b: i32) -> i32 { ... }`
+
+## Stretch Goals
+
+Once you've completed the basic exercises, try these challenges:
+
+1. **[Stretch 1]**: [Description]
+   - Learn about: [New concept]
+   - Hint: [Helpful pointer]
+
+2. **[Stretch 2]**: [Description]
+   - Learn about: [New concept]
+   - Hint: [Helpful pointer]
+
+3. **[Stretch 3]**: [Description]
+   - Learn about: [New concept]
+
+## What's Next?
+
+After completing this lab, you'll move to **Lab NM: [Next Topic]**, where you'll learn about [preview of next concept]. Understanding [current concept] is essential before diving into [next concept].
+
+---
+
+## Testing Checklist
+
+Before you submit, make sure:
+
+- [ ] `cargo test` passes all tests
+- [ ] `cargo check` compiles without errors
+- [ ] `cargo run` executes without panicking
+- [ ] Code is formatted with `cargo fmt`
+- [ ] You understand what every test is checking
+- [ ] You can explain each function to someone else
+
+## Learning Tips
+
+1. **Read the tests first** - They show exactly what the function should do
+2. **Use `cargo test` often** - Tests give you immediate feedback
+3. **Check `solution.rs`** - If stuck, read the exhaustive explanations
+4. **Try stretch goals** - They deepen your understanding
+5. **Compare with other languages** - Section above shows Rust's advantages
+
+Good luck! Remember: read the comments in `solution.rs` - every line is explained! 🦀

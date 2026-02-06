@@ -1,0 +1,147 @@
+//! # Lab NN - Complete Solution with Exhaustive Explanations
+//!
+//! ## What We're Building
+//!
+//! This module contains [X] functions that teach you [main concepts].
+//! We're building the foundation for [larger concept]:
+//! - [Concept 1]
+//! - [Concept 2]
+//! - [Concept 3]
+//!
+//! These might seem simple, but they demonstrate concepts that [why this matters]!
+//!
+//! ## Why Rust Is Perfect For This
+//!
+//! - **[Feature 1]**: [Explanation of advantage]
+//!   Example: [code example showing the benefit]
+//!
+//! - **[Feature 2]**: [Explanation of advantage]
+//!   Example: [code example]
+//!
+//! - **Compared to JavaScript**: [Specific advantage]
+//! - **Compared to Python**: [Specific advantage]
+//! - **Compared to Go**: [Specific advantage]
+//!
+//! ## Key Rust Concepts You'll Learn
+//!
+//! - **[Concept 1]**: [Brief explanation]
+//! - **[Concept 2]**: [Brief explanation]
+//! - **[Concept 3]**: [Brief explanation]
+//!
+//! ## Time Complexity: [Analysis - e.g., O(n) for iteration]
+//! ## Space Complexity: [Analysis - e.g., O(1) for in-place, O(n) for new allocation]
+
+/// [One-line description]
+///
+/// ## What This Function Does
+///
+/// [2-3 sentences explaining in plain English what this does]
+///
+/// ## Parameters
+///
+/// - `param1: &str` - Let's break this down completely:
+///   - `param1` = parameter name (you choose this, it's descriptive)
+///   - `:` = "has type" separator (says what type comes next)
+///   - `&` = "borrow" operator - we're not taking ownership
+///   - `str` = string slice type (text data that lives somewhere else)
+///
+///   The `&str` type means "a borrowed view of a string". [Why we use this type]
+///
+/// - `param2: Type` - [Detailed explanation of each component]
+///
+/// ## Returns
+///
+/// - `ReturnType` - [Explanation of why we return this type]
+///
+/// ## Example
+/// ```ignore
+/// let result = function_name("input", 42);
+/// assert_eq!(result, expected);
+/// ```ignore
+///
+/// ## Ownership & Borrowing Analysis
+///
+/// - Parameters `param1` are BORROWED (&Type)
+///   - The `&` means we're borrowing, not taking ownership
+///   - The caller still owns the original data
+///   - We can only READ the data (immutable borrow)
+///   - WHY: [reason - e.g., "We don't need to own the strings, just look at them"]
+///   - After this function ends, param1 just disappear (they were references)
+///
+/// - Return value is OWNED (ReturnType)
+///   - No `&`, so ownership transfers to caller
+///   - We create the [Type] on the [stack/heap]
+///   - Caller receives ownership and must eventually drop it
+///   - WHY: [reason - e.g., "Caller needs to keep the result after our function ends"]
+///
+/// ## Memory Layout
+///
+/// ```ignore
+/// Stack (when function is called):          Heap (if applicable):
+/// ┌──────────────────────┐
+/// │ param1: &str         │──────────▶  "data" (lives in caller's memory or binary)
+/// │  - ptr: 0x1000       │
+/// │  - len: 4            │
+/// └──────────────────────┘
+/// ┌──────────────────────┐
+/// │ result: String       │──────────▶  [allocated on heap]
+/// │  - ptr: 0x2000       │              [owned by function]
+/// │  - len: 5            │              [transferred to caller]
+/// │  - capacity: 8       │
+/// └──────────────────────┘
+/// ```
+///
+/// ## Common Mistakes & How to Avoid
+///
+/// 1. **[Mistake 1]**: [Description]
+///    ```rust
+///    [wrong code example]
+///    ```
+///    **Fix**: [How to fix]
+///    **Why it happens**: [Explanation]
+///
+/// 2. **[Mistake 2]**: [Description]
+///    **Fix**: [How to fix]
+pub fn function_name(param1: &str, param2: i32) -> String {
+    // Implementation here
+    format!("result")
+}
+
+/// [One-line description]
+///
+/// ## What This Function Does
+///
+/// [Explanation]
+///
+/// ## Parameters
+///
+/// - `param: Type` - [Explanation]
+///
+/// ## Returns
+///
+/// - `ReturnType` - [Explanation]
+///
+/// ## Example
+/// ```ignore
+/// assert_eq!(function_name(input), expected);
+/// ```ignore
+///
+/// ## Time Complexity
+/// O(n) [reason: iterates through...]
+///
+/// ## Space Complexity
+/// O(1) [reason: no additional allocation...]
+pub fn another_function(param: Type) -> ReturnType {
+    // Implementation here
+}
+
+// Add more functions following the same exhaustive documentation pattern
+// Remember: every function needs:
+// - What it does (plain English)
+// - Parameters (with symbol breakdown)
+// - Returns (with explanation)
+// - Example (usage pattern)
+// - Ownership & Borrowing Analysis (if applicable)
+// - Memory Layout (if complex)
+// - Common mistakes (if applicable)
+// - Complexity analysis (for algorithms)

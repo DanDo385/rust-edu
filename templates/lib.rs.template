@@ -1,0 +1,79 @@
+//! # Lab NN - [Topic Name]
+//!
+//! [Brief 2-3 sentence overview of what this lab teaches]
+//!
+//! This project teaches you:
+//! - [Concept 1]: [Brief explanation]
+//! - [Concept 2]: [Brief explanation]
+//! - [Concept 3]: [Brief explanation]
+//!
+//! ## Your Task
+//!
+//! Implement the functions below. Each function has:
+//! - Documentation explaining what it should do
+//! - A `todo!()` macro that panics when called (replace with your code)
+//! - Hints in comments to guide you
+//!
+//! ## Running Your Code
+//!
+//! ```bash
+//! # Run tests to check your implementation
+//! cargo test -p [package-name]
+//!
+//! # Run the main binary to see it in action
+//! cargo run -p [package-name]
+//! ```
+//!
+//! ## Stuck?
+//!
+//! Check out `src/solution.rs` for a complete, heavily-commented solution.
+//! Don't just copy - read and understand! Every line is explained.
+
+/// [One-line description of what this function does]
+///
+/// This function teaches you about:
+/// - [Concept A]
+/// - [Concept B]
+/// - [Concept C]
+///
+/// # Parameters
+/// - `param1: Type1` - [Description of what this parameter is and why it has this type]
+/// - `param2: Type2` - [Description]
+///
+/// # Returns
+/// [Description of return type and why it's needed]
+///
+/// # Example
+/// ```ignore
+/// use module_name::function_name;
+/// let result = function_name(arg1, arg2);
+/// assert_eq!(result, expected);
+/// ```
+pub fn function_name(param1: Type1, param2: Type2) -> ReturnType {
+    // TODO: [Description of what to implement]
+    // Hint: [Helpful hint pointing toward solution]
+    // Hint: [Another hint if complex]
+    todo!("Implement [what to do]")
+}
+
+/// [One-line description]
+///
+/// This teaches you:
+/// - [Concept]
+///
+/// # Parameters
+/// - `param: Type` - [Description]
+///
+/// # Returns
+/// [Description]
+///
+/// # Example
+/// ```ignore
+/// use module_name::function_name;
+/// assert_eq!(function_name(input), expected);
+/// ```
+pub fn another_function(param: Type) -> ReturnType {
+    todo!("Implement [what to do]")
+}
+
+// Add more function stubs as needed following the same pattern

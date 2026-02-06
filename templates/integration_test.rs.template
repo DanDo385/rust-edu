@@ -1,0 +1,219 @@
+//! Integration tests for [lab-name]
+//!
+//! These tests verify that the solution works correctly and all functions
+//! implement the required behavior. Each test documents what invariant or
+//! requirement it's checking.
+//!
+//! Run with: cargo test -p [package-name]
+
+// Import the solution module from our library
+use module_name::solution::*;
+
+// ============================================================================
+// TESTS FOR: function_name
+// ============================================================================
+
+#[test]
+fn test_function_name_basic() {
+    // Test basic/happy path case
+    let result = function_name(input);
+    assert_eq!(result, expected);
+}
+
+#[test]
+fn test_function_name_edge_case_1() {
+    // Test edge case: [description of what edge case]
+    let result = function_name(edge_input);
+    assert_eq!(result, expected);
+}
+
+#[test]
+fn test_function_name_edge_case_2() {
+    // Test edge case: [another edge case]
+    assert_eq!(function_name(input1), expected1);
+    assert_eq!(function_name(input2), expected2);
+}
+
+#[test]
+fn test_function_name_boundary() {
+    // Test boundary conditions: empty, zero, max, min, etc
+    assert_eq!(function_name(boundary_input), expected);
+}
+
+// ============================================================================
+// TESTS FOR: another_function
+// ============================================================================
+
+#[test]
+fn test_another_function_basic() {
+    // Test basic functionality
+    let result = another_function(input);
+    assert_eq!(result, expected);
+}
+
+#[test]
+fn test_another_function_negative() {
+    // Test with negative numbers / invalid input
+    let result = another_function(negative_input);
+    assert_eq!(result, expected);
+}
+
+#[test]
+fn test_another_function_zero() {
+    // Test with zero (often an edge case)
+    assert_eq!(another_function(0), expected);
+}
+
+#[test]
+fn test_another_function_large_input() {
+    // Test with large inputs to check scalability
+    let result = another_function(large_input);
+    assert!(result > 0, "Result should be positive for large input");
+}
+
+// ============================================================================
+// INTEGRATION TESTS - Testing multiple functions together
+// ============================================================================
+
+#[test]
+fn test_integration_functions_together() {
+    // Test that multiple functions work together correctly
+    let result1 = function_name(input);
+    let result2 = another_function(result1);
+    assert_eq!(result2, expected);
+}
+
+#[test]
+fn test_integration_chained_operations() {
+    // Test chaining multiple function calls
+    let intermediate = function_name(input1);
+    let final_result = function_name(intermediate);
+    assert_eq!(final_result, expected);
+}
+
+// ============================================================================
+// PROPERTY-BASED TESTS - Testing invariants and properties
+// ============================================================================
+
+#[test]
+fn test_property_output_bounds() {
+    // Property: Output should always be within expected bounds
+    for i in 0..100 {
+        let result = function_name(i);
+        assert!(result >= 0, "Result must be >= 0");
+        assert!(result <= 1000, "Result must be <= 1000");
+    }
+}
+
+#[test]
+fn test_property_operation_is_reversible() {
+    // Property: If we apply operation A then operation B, we should get original back
+    for i in 0..50 {
+        let original = i as f64;
+        let transformed = function_name(original);
+        let reversed = another_function(transformed);
+        assert!((original - reversed).abs() < 0.0001, "Operation should be reversible");
+    }
+}
+
+#[test]
+fn test_property_output_is_in_input_set() {
+    // Property: Result should be one of the input values
+    let inputs = vec![5, 10, 3, 7, 1];
+    let result = function_name(&inputs);
+    assert!(inputs.contains(&result), "Result must be from input set");
+}
+
+#[test]
+fn test_property_order_independence() {
+    // Property: Function should work regardless of input order
+    let input1 = vec![1, 2, 3, 4, 5];
+    let input2 = vec![5, 4, 3, 2, 1];
+
+    assert_eq!(function_name(&input1), function_name(&input2));
+}
+
+#[test]
+fn test_property_commutative() {
+    // Property: Order of operations shouldn't matter
+    let a = 10;
+    let b = 20;
+
+    assert_eq!(
+        function_name(another_function(a, b)),
+        function_name(another_function(b, a))
+    );
+}
+
+// ============================================================================
+// PERFORMANCE TESTS - Ensure functions don't have unexpected complexity
+// ============================================================================
+
+#[test]
+fn test_performance_handles_large_input() {
+    // Test that function completes in reasonable time with large input
+    let large_input = (0..10000).collect::<Vec<_>>();
+
+    let start = std::time::Instant::now();
+    let result = function_name(&large_input);
+    let elapsed = start.elapsed();
+
+    // Should complete in less than 100ms for O(n) algorithm
+    assert!(
+        elapsed.as_millis() < 100,
+        "Function took {:?}, which might indicate O(n²) or worse",
+        elapsed
+    );
+
+    assert!(result > 0, "Function should return valid result");
+}
+
+// ============================================================================
+// REGRESSION TESTS - Tests for bugs that were fixed
+// ============================================================================
+
+#[test]
+fn test_regression_empty_input() {
+    // Regression: Make sure we handle empty input correctly
+    let empty = vec![];
+    let result = function_name(&empty);
+    assert_eq!(result, expected_for_empty);
+}
+
+#[test]
+fn test_regression_unicode_handling() {
+    // Regression: Make sure unicode strings work
+    assert_eq!(function_name("café"), expected);
+    assert_eq!(function_name("日本語"), expected);
+}
+
+// ============================================================================
+// ERROR HANDLING TESTS - If function returns Option or Result
+// ============================================================================
+
+#[test]
+fn test_returns_none_for_empty() {
+    // Test that None is returned for empty input
+    let result = function_name(&[]);
+    assert_eq!(result, None);
+}
+
+#[test]
+fn test_returns_some_for_valid() {
+    // Test that Some is returned for valid input
+    let result = function_name(&[1, 2, 3]);
+    assert!(result.is_some());
+}
+
+#[test]
+fn test_unwraps_safely() {
+    // Test unwrapping Some values
+    let result = function_name(&[1, 2, 3]).unwrap();
+    assert_eq!(result, expected_value);
+}
+
+// ============================================================================
+// DOCUMENTATION TESTS - Tests defined in doc comments (optional)
+// ============================================================================
+// Note: These would be in the src/solution.rs file as part of doc comments
+// Only uncomment if your functions have ```ignore doc tests
