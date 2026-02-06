@@ -3,6 +3,15 @@
 // Enums define types with multiple possible variants.
 // Pattern matching ensures you handle all cases safely.
 
+// Each variant can hold different types of data!
+#[derive(Debug)]
+enum Message {
+    Quit,                       // No data
+    Move { x: i32, y: i32 },   // Named fields (like a struct)
+    Write(String),              // Single value
+    ChangeColor(u8, u8, u8),   // Tuple
+}
+
 fn main() {
     println!("=== Enums and Pattern Matching ===\n");
 
@@ -34,15 +43,6 @@ fn main() {
     // ============================================================================
     // ENUMS WITH DATA
     // ============================================================================
-
-    // Each variant can hold different types of data!
-    #[derive(Debug)]
-    enum Message {
-        Quit,                       // No data
-        Move { x: i32, y: i32 },   // Named fields (like a struct)
-        Write(String),              // Single value
-        ChangeColor(u8, u8, u8),   // Tuple
-    }
 
     let messages = vec![
         Message::Quit,

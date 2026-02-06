@@ -284,7 +284,8 @@ fn main() {
     println!("Product using fold: {}", product);
 
     // enumerate - get index with value
-    let indexed: Vec<_> = vec!["a", "b", "c"].iter()
+    let items = vec!["a", "b", "c"];
+    let indexed: Vec<_> = items.iter()
         .enumerate()
         .collect();
     println!("Enumerated: {:?}", indexed);  // [(0, "a"), (1, "b"), (2, "c")]

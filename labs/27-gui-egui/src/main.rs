@@ -14,12 +14,7 @@ fn main() -> Result<(), eframe::Error> {
     let options = eframe::NativeOptions {
         viewport: egui::ViewportBuilder::default()
             .with_inner_size([800.0, 600.0])  // Window size
-            .with_min_inner_size([400.0, 300.0])  // Minimum size
-            .with_icon(
-                // Load app icon (optional)
-                eframe::icon_data::from_png_bytes(&include_bytes!("../../../assets/icon-256.png")[..])
-                    .unwrap_or_default(),
-            ),
+            .with_min_inner_size([400.0, 300.0]),  // Minimum size
         ..Default::default()
     };
 

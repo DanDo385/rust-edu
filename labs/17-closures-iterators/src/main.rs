@@ -139,7 +139,8 @@ fn main() {
 
     // Combining map and filter
     let result: Vec<_> = numbers.iter()
-        .filter(|x| *x > 5)       // Keep numbers > 5
+        .filter(|x| **x > 5)       // Keep numbers > 5
+        .copied()
         .map(|x| x * x)           // Square them
         .collect();
     println!("Squares of numbers > 5: {:?}", result);
@@ -159,7 +160,7 @@ fn main() {
 
     // Custom accumulation
     let product = numbers.iter()
-        .filter(|x| *x <= 5)
+        .filter(|x| **x <= 5)
         .fold(1, |acc, x| acc * x);
     println!("Product of numbers <= 5: {}", product);
 

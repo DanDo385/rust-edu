@@ -19,7 +19,6 @@ use std::thread;
 // ============================================================================
 // Represents a connected client with their ID and stream for writing.
 
-#[derive(Clone)]
 struct Client {
     id: usize,
     stream: TcpStream,

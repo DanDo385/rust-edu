@@ -1,3 +1,11 @@
+//! Models module
+//!
+//! This module contains data models used throughout the application.
+//!
+//! # Available Models
+//!
+//! - [`User`]: Represents a user in the system
+
 // models/mod.rs - Module declaration file
 //
 // This file declares submodules within the 'models' module.
@@ -16,17 +24,6 @@ pub mod user;
 // Instead of: use my_library::models::user::User;
 // Users can do: use my_library::models::User;
 pub use user::User;
-
-// ============================================================================
-// MODULE-LEVEL DOCUMENTATION
-// ============================================================================
-//! Models module
-//!
-//! This module contains data models used throughout the application.
-//!
-//! # Available Models
-//!
-//! - [`User`]: Represents a user in the system
 
 // ============================================================================
 // MODULE-LEVEL FUNCTIONALITY

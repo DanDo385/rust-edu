@@ -27,7 +27,7 @@ type UtxoId = String;
 type Address = String;
 
 /// Represents a UTXO (Unspent Transaction Output)
-/// This is a "coin" that exists in the blockchain and can be spent
+// This is a "coin" that exists in the blockchain and can be spent
 #[derive(Debug, Clone)]
 struct Utxo {
     /// The address that owns this UTXO (who can spend it)
@@ -37,9 +37,9 @@ struct Utxo {
     /// In Bitcoin, this would be in satoshis (1 BTC = 100,000,000 satoshis)
     amount: u64,
 
-    /// In real blockchains, there would also be a "locking script" here
-    /// (Bitcoin Script, Plutus, etc.) that defines spending conditions
-    /// For simplicity, we just check ownership by address
+    // In real blockchains, there would also be a "locking script" here
+    // (Bitcoin Script, Plutus, etc.) that defines spending conditions
+    // For simplicity, we just check ownership by address
 }
 
 impl Utxo {

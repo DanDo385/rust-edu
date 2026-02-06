@@ -28,7 +28,7 @@ fn main() {
 
     for round in 1..=3 {
         println!("{}", format!("Round {}:", round).bright_cyan());
-        run_consensus_round(round, num_nodes, num_faulty, proposed_value + round - 1);
+        run_consensus_round(round, num_nodes, num_faulty, proposed_value + (round as i32) - 1);
         println!();
         thread::sleep(Duration::from_millis(500));
     }

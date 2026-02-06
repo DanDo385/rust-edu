@@ -1,3 +1,20 @@
+//! # Modules and Crates Library
+//!
+//! This library demonstrates Rust's module system and crate organization.
+//!
+//! ## Quick Start
+//!
+//! ```
+//! use modules_crates::prelude::*;
+//!
+//! // Create a user
+//! let user = User::new("alice".to_string(), "alice@example.com".to_string());
+//!
+//! // Authenticate
+//! let token = authenticate(&user);
+//! println!("Token: {}", token.value());
+//! ```
+
 // Project 15: Modules and Crates - Library Crate
 //
 // This is the LIBRARY crate root (lib.rs). A library crate provides reusable
@@ -108,55 +125,6 @@ mod tests {
         init("Test");
     }
 }
-
-// ============================================================================
-// DOCUMENTATION
-// ============================================================================
-//! # Modules and Crates Library
-//!
-//! This library demonstrates Rust's module system and crate organization.
-//!
-//! ## Quick Start
-//!
-//! ```
-//! use modules_crates::prelude::*;
-//!
-//! // Create a user
-//! let user = User::new("alice".to_string(), "alice@example.com".to_string());
-//!
-//! // Authenticate
-//! let token = authenticate(&user);
-//! println!("Token: {}", token.value());
-//! ```
-//!
-//! ## Module Organization
-//!
-//! - **models**: Data models (User, etc.)
-//! - **services**: Business logic (authentication, etc.)
-//! - **utils**: Internal utility functions (private)
-//!
-//! ## Privacy and Encapsulation
-//!
-//! Rust uses privacy by default:
-//! - Everything is private unless marked `pub`
-//! - Modules provide privacy boundaries
-//! - Use `pub` to expose public API
-//! - Use `pub(crate)` for internal-only public items
-//!
-//! ## Re-exports
-//!
-//! We re-export commonly used items at the crate root for convenience.
-//! You can use them as:
-//!
-//! ```
-//! use modules_crates::{User, authenticate};
-//! ```
-//!
-//! Or import the prelude:
-//!
-//! ```
-//! use modules_crates::prelude::*;
-//! ```
 
 // ============================================================================
 // KEY TAKEAWAYS
