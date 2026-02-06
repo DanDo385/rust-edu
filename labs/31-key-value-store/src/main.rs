@@ -387,10 +387,13 @@ impl KeyValueStore {
         let mut new_offset = 0u64;
         let mut new_index = HashMap::new();
 
+        // Collect keys first to avoid borrow checker issues
+        let keys: Vec<_> = self.index.keys().cloned().collect();
+
         // Write all current key-value pairs to new file
-        for (key, pointer) in &self.index {
+        for key in keys {
             // Read the value
-            let value = self.get(key)?.unwrap();
+            let value = self.get(&key)?.unwrap();
 
             // Write to new log
             let command = Command::Set {

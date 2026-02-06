@@ -225,6 +225,9 @@ impl TodoList {
         let incomplete: Vec<&Task> = self.tasks.iter().filter(|t| !t.completed).collect();
         let completed: Vec<&Task> = self.tasks.iter().filter(|t| t.completed).collect();
 
+        let completed_count = completed.len();
+        let incomplete_count = incomplete.len();
+
         if !incomplete.is_empty() {
             println!("Pending:");
             for task in incomplete {
@@ -244,23 +247,29 @@ impl TodoList {
         println!(
             "Total: {} tasks ({} completed, {} pending)",
             self.tasks.len(),
-            completed.len(),
-            incomplete.len()
+            completed_count,
+            incomplete_count
         );
     }
 
     /// Mark task as complete
     fn complete_task(&mut self, id: usize) {
-        if let Some(task) = self.tasks.iter_mut().find(|t| t.id == id) {
+        let found = if let Some(task) = self.tasks.iter_mut().find(|t| t.id == id) {
             if task.completed {
                 println!("Task #{} is already completed", id);
+                false
             } else {
                 task.completed = true;
-                self.save();
                 println!("✓ Marked task #{} as complete: {}", id, task.description);
+                true
             }
         } else {
             eprintln!("Error: Task #{} not found", id);
+            false
+        };
+
+        if found {
+            self.save();
         }
     }
 

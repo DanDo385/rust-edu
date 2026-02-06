@@ -126,7 +126,7 @@ fn main() {
         .into_iter()
         .map(|(cmd, args)| {
             thread::spawn(move || {
-                let args_str: Vec<&str> = args.iter().map(|s| s.as_str()).collect();
+                let args_str: Vec<&str> = args.iter().map(|s| &s[..]).collect();
                 run_command_simple(cmd, &args_str);
             })
         })
@@ -223,7 +223,7 @@ fn main() {
         .expect("Failed to run echo");
 
     // Second command, using first's output as input
-    let wc_output = Command::new("wc")
+    let mut wc_output = Command::new("wc")
         .arg("-w")
         .stdin(Stdio::piped())
         .stdout(Stdio::piped())
@@ -231,7 +231,7 @@ fn main() {
         .expect("Failed to spawn wc");
 
     use std::io::Write;
-    if let Some(mut stdin) = wc_output.stdin {
+    if let Some(mut stdin) = wc_output.stdin.take() {
         stdin
             .write_all(&echo_output.stdout)
             .expect("Failed to write to stdin");
