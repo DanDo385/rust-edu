@@ -7,3 +7,6 @@ authors.workspace = true
 license.workspace = true
 
 [dependencies]
+reqwest = "0.11"
+scraper = "0.17"
+tokio = { version = "1", features = ["full"] }

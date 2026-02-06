@@ -16,19 +16,19 @@ async fn main() -> Result<(), Box<dyn Error>> {
     println!("1. Fetching example.com...");
     simple_fetch("https://example.com").await?;
 
-    println!("\n" + &"=".repeat(60) + "\n");
+    println!("\n{}\n", "=".repeat(60));
 
     // Example 2: Extract specific data from HTML
     println!("2. Extracting data from Rust homepage...");
     extract_rust_homepage_data().await?;
 
-    println!("\n" + &"=".repeat(60) + "\n");
+    println!("\n{}\n", "=".repeat(60));
 
     // Example 3: Scrape multiple pages with rate limiting
     println!("3. Scraping multiple pages with rate limiting...");
     scrape_multiple_urls().await?;
 
-    println!("\n" + &"=".repeat(60) + "\n");
+    println!("\n{}\n", "=".repeat(60));
 
     // Example 4: Error handling for failed requests
     println!("4. Demonstrating error handling...");

@@ -16,25 +16,25 @@ fn main() -> Result<(), Box<dyn Error>> {
     println!("1. Simple CSV to JSON conversion");
     simple_conversion()?;
 
-    println!("\n" + &"=".repeat(60) + "\n");
+    println!("\n{}\n", "=".repeat(60));
 
     // Example 2: Advanced conversion with field mapping
     println!("2. Advanced conversion with field mapping");
     advanced_conversion()?;
 
-    println!("\n" + &"=".repeat(60) + "\n");
+    println!("\n{}\n", "=".repeat(60));
 
     // Example 3: Handling nested structures
     println!("3. Converting to nested JSON structures");
     nested_structures()?;
 
-    println!("\n" + &"=".repeat(60) + "\n");
+    println!("\n{}\n", "=".repeat(60));
 
     // Example 4: Error handling and data validation
     println!("4. Error handling and data validation");
     error_handling_demo()?;
 
-    println!("\n" + &"=".repeat(60) + "\n");
+    println!("\n{}\n", "=".repeat(60));
 
     // Example 5: Streaming large files
     println!("5. Streaming large CSV files");
