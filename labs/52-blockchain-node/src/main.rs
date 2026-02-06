@@ -118,7 +118,7 @@ impl BlockchainNode {
                         return Err("Invalid signature".to_string());
                     }
 
-                    input_total += utxo.amount;
+                    input_total += utxo.output.amount;
                 }
                 None => return Err(format!("UTXO not found: {}:{}", input.txid, input.vout)),
             }
@@ -482,7 +482,7 @@ impl Transaction {
     fn calculate_fee(&self, utxo_set: &UTXOSet) -> u64 {
         let input_total: u64 = self.inputs.iter()
             .filter_map(|input| utxo_set.get_utxo(&input.txid, input.vout))
-            .map(|utxo| utxo.amount)
+            .map(|utxo| utxo.output.amount)
             .sum();
 
         let output_total: u64 = self.outputs.iter().map(|o| o.amount).sum();

@@ -13,31 +13,41 @@ fn main() {
     println!("1. Rational Number Arithmetic");
     rational_demo();
 
-    println!("\n" + &"=".repeat(60) + "\n");
+    println!("
+{}
+", "=".repeat(60));
 
     // Example 2: Complex numbers
     println!("2. Complex Number Arithmetic");
     complex_demo();
 
-    println!("\n" + &"=".repeat(60) + "\n");
+    println!("
+{}
+", "=".repeat(60));
 
     // Example 3: Operator implementations for references
     println!("3. Reference Operators");
     reference_demo();
 
-    println!("\n" + &"=".repeat(60) + "\n");
+    println!("
+{}
+", "=".repeat(60));
 
     // Example 4: Comparison operators
     println!("4. Comparison Operators");
     comparison_demo();
 
-    println!("\n" + &"=".repeat(60) + "\n");
+    println!("
+{}
+", "=".repeat(60));
 
     // Example 5: Compound assignment operators
     println!("5. Compound Assignment Operators");
     assignment_demo();
 
-    println!("\n" + &"=".repeat(60) + "\n");
+    println!("
+{}
+", "=".repeat(60));
 
     // Example 6: Generic functions with operator bounds
     println!("6. Generic Functions with Operator Bounds");
