@@ -1,21 +1,29 @@
-# Rust Blockchain Learning Path
+# Rust-Edu: 61-Lab Comprehensive Curriculum
 
-Learn Rust from absolute basics to blockchain implementation!
+**Learn Rust from absolute basics to production-ready systems programming!**
+
+A unified, pedagogically structured curriculum with 61 interconnected labs spanning:
+- ✅ Fundamentals (variables, ownership, collections, structs, error handling)
+- ✅ Intermediate Rust (traits, generics, lifetimes, advanced type system)
+- ✅ Systems Programming (concurrency, async, FFI, memory safety)
+- ✅ Blockchain & Cryptography (hashing, merkle trees, consensus, digital signatures)
+- ✅ Advanced Applications (web servers, GUI, parsers, virtual machines, trading algorithms)
 
 ## 🎯 Learning Philosophy
 
-This repository teaches Rust through **extreme detail** and **progressive difficulty**:
+This curriculum teaches Rust through **extreme pedagogical detail** and **spiral progression**:
 
-- **Projects 1-5**: Super easy - Learn Rust fundamentals
-- **Project 6**: Medium - Traits and abstraction
-- **Projects 7-10**: Blockchain focus - Real-world applications
+- **Labs 01-10**: Foundation phase - Core language concepts with exhaustive teaching
+- **Labs 11-20**: Intermediate phase - Advanced language features and real-world patterns
+- **Labs 21-40**: Systems & Applications - Concurrency, async, web, and specialized domains
+- **Labs 41-60**: Advanced Projects - Production-ready implementations
+- **Labs 54-60**: Alternative Implementations - Deep dives into specific topics
 
-Every line of code in `solution.rs` is explained in detail. You'll understand:
-- What every symbol means (`&`, `mut`, `::`, etc.)
-- Why we make each decision
-- How memory works
-- What the borrow checker prevents
-- How it compares to other languages
+Every lab includes:
+- **Memory Model section**: Conceptual + under-the-hood + memory diagrams
+- **Symbol Deep Dive**: Complete explanation of every `&`, `*`, `::`, `->`, `?`, etc.
+- **Comprehensive solution.rs**: Step-by-step teaching with ownership implications
+- **Integration tests**: Verify invariants and learning outcomes
 
 ## 🚀 Quick Start
 
@@ -23,81 +31,105 @@ Every line of code in `solution.rs` is explained in detail. You'll understand:
 # 1. Install Rust (if you haven't already)
 curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
 
-# 2. You're already in the repository!
+# 2. Clone or enter this repository
 cd rust-edu
 
-# 3. Build everything
+# 3. Build all 61 labs
 cargo build --workspace
 
-# 4. Start with project 1
-cd 01-variables-types
+# 4. Start with Lab 01
+cd labs/01-variables-types
 cargo run
 
-# 5. Read the solution
-cat src/solution.rs  # EVERY line is explained!
+# 5. Read the solution (exhaustively detailed!)
+cat src/solution.rs
 
-# 6. Run tests
+# 6. Run tests and complete exercises
 cargo test
 
-# 7. Move to project 2
-cd ../02-ownership-borrowing
-# Repeat!
+# 7. Progress through the curriculum
+cd ../../labs/02-ownership-borrowing
+# ... and so on through all 61 labs!
 ```
 
-## 📚 Project Roadmap
+## 📚 Curriculum Structure
 
-### Phase 1: Rust Fundamentals (Projects 1-5)
+### 🟢 Foundation Labs (01-10): Core Language Concepts
 
-**01-variables-types** (30 min)
-- ✅ Variable declaration
-- ✅ Basic types
-- ✅ String vs &str
-- ✅ First functions
+**01-variables-types** - Variables, types, and type inference
+**02-ownership-borrowing** - Ownership, borrowing, references (⭐ Critical)
+**03-collections-basics** - Vec, HashMap, iteration patterns
+**04-structs-methods** - Custom types, methods, `self` variants
+**05-error-handling** - Option, Result, `?` operator, error propagation
+**06-traits-basics** - Trait definitions, polymorphism, bounds (⭐ Critical)
+**07-sha256-hashing** - Cryptographic hashing, proof-of-work
+**08-merkle-tree** - Tree structures, merkle trees, verification
+**09-simple-blockchain** - Full blockchain implementation
+**10-transaction-validation** - UTXO model, validation rules
 
-**02-ownership-borrowing** (45 min)
-- ✅ Ownership rules
-- ✅ Borrowing (`&` and `&mut`)
-- ✅ Why Rust prevents bugs
-- ✅ Memory diagrams
+### 🟡 Intermediate Labs (11-20): Advanced Language Features
 
-**03-collections-basics** (45 min)
-- ✅ Vec (dynamic arrays)
-- ✅ HashMap (key-value)
-- ✅ Iteration
-- ✅ Zero-cost abstractions
+**11-control-flow** - Pattern matching, exhaustiveness, guards
+**12-enums-pattern-matching** - ADTs, pattern matching deep dive
+**13-generics-bounds** - Generic types, trait bounds, monomorphization
+**14-utxo-model** - Blockchain UTXO implementation
+**15-lifetimes-borrow-checker** - Lifetime syntax, elision rules (⭐ Critical)
+**16-collections-iterators** - Iterator traits, adapters, lazy evaluation
+**17-closures-iterators** - Closures, captures, functional patterns
+**18-modules-crates** - Module system, visibility, package organization
+**19-smart-pointers** - Box, Rc, RefCell, Arc, interior mutability
+**20-multithreading-basics** - Threads, channels, synchronization primitives
 
-**04-structs-methods** (45 min)
-- ✅ Custom types
-- ✅ Methods vs functions
-- ✅ `self`, `&self`, `&mut self`
-- ✅ Encapsulation
+### 🟠 Systems Labs (21-35): Real-World Systems Programming
 
-**05-error-handling** (1 hour)
-- ✅ Option and Result
-- ✅ The `?` operator
-- ✅ Custom errors
-- ✅ Proper error propagation
+**21-async-basics** - Async/await, futures, runtimes
+**22-chat-server** - Network programming with async
+**23-testing-benchmarking** - Unit tests, integration tests, benchmarking
+**24-cargo-features** - Feature gates, conditional compilation
+**25-transaction-pool** - Blockchain mempool implementation
+**26-consensus-simulation** - Consensus algorithms (PoW, PoS simulation)
+**27-gui-egui** - GUI programming with egui
+**28-web-server-axum** - HTTP server with web framework
+**29-thread-pool** - Thread pool implementation
+**30-lock-free-structure** - Atomic operations, lock-free data structures
+**31-key-value-store** - In-memory KV store with persistence
+**32-basic-vm** - Virtual machine implementation
+**33-message-bus** - Event-driven architecture
+**34-lru-cache** - Cache implementations with eviction
+**35-parallel-processing** - Rayon, data parallelism
 
-### Phase 2: Intermediate Rust (Project 6)
+### 🔴 Advanced Labs (36-53): Specialized Domains
 
-**06-traits-basics** (1 hour)
-- ✅ Traits (interfaces)
-- ✅ Polymorphism
-- ✅ Trait bounds
-- ✅ Derive macros
+**36-interpreter** - Expression evaluation, AST walking
+**37-command-runner** - Process management, subprocess communication
+**38-memmap-search** - Memory-mapped file search
+**39-order-book** - Trading order book data structure
+**40-task-scheduler** - Event-driven scheduling system
+**41-cli-todo** - Command-line application
+**42-plugin-system** - Runtime plugin loading
+**43-file-encryption** - Encryption implementation
+**44-web-scraper** - Web scraping patterns
+**45-csv-to-json** - Data transformation
+**46-declarative-macros** - Macro-by-example (declarative macros)
+**47-operator-overloading** - Custom operator implementations
+**48-proof-of-work** - PoW algorithms and difficulty
+**49-digital-signatures** - Signing and verification
+**50-wallet-cli** - Blockchain wallet implementation
+**51-concurrent-crawler** - Web crawling with concurrency
+**52-blockchain-node** - Full blockchain node
+**53-hft-trading-bot** - High-frequency trading simulation
 
-### Phase 3: Blockchain Applications (Projects 7-10)
+### 💜 Alternative Implementations (54-60): Deep Dives
 
-**07-sha256-hashing** (1.5 hours) 🔗
-- ✅ Cryptographic hashing
-- ✅ SHA-256 algorithm
-- ✅ Proof-of-work basics
-- ✅ How Bitcoin mining works
+**54-variables-types-alternative** - Alternative approach to type fundamentals
+**55-ownership-borrowing-alternative** - Advanced ownership patterns
+**56-structs-methods-alternative** - Struct design patterns
+**57-traits-interfaces-alternative** - Trait-based design deep dive
+**58-error-handling-alternative** - Error handling patterns
+**59-merkle-tree-alternative** - Alternative merkle tree implementation
+**60-blockchain-alternative** - Alternative blockchain design
 
-**08-merkle-tree** (2 hours) 🔗
-- ✅ Tree data structures
-- ✅ Merkle trees
-- ✅ Verification proofs
+
 - ✅ Recursive types with Box
 
 **09-simple-blockchain** (3 hours) 🔗
