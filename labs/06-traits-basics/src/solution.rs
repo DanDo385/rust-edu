@@ -100,6 +100,10 @@ pub fn largest_shape<'a>(shapes: &[&'a dyn Shape]) -> Option<&'a dyn Shape> {
 
     shapes
         .iter()
-        .max_by(|a, b| a.area().partial_cmp(&b.area()).unwrap())
+        .max_by(|a, b| {
+            // Handle potential NaN values in f64 comparisons
+            // In practice, our shapes should produce finite areas, but we handle NaN gracefully
+            a.area().partial_cmp(&b.area()).unwrap_or(std::cmp::Ordering::Equal)
+        })
         .copied()
 }

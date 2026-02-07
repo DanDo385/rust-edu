@@ -1212,7 +1212,10 @@ dependencies = [
 name = "digital-signatures"
 version = "0.1.0"
 dependencies = [
+ "hex",
  "k256",
+ "rand",
+ "sha2",
 ]
 
 [[package]]
@@ -4876,7 +4879,11 @@ dependencies = [
 name = "wallet-cli"
 version = "0.1.0"
 dependencies = [
+ "hex",
  "k256",
+ "rand",
+ "serde",
+ "sha2",
 ]
 
 [[package]]

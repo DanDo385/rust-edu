@@ -199,23 +199,25 @@ fn parallel_search(path: &str, pattern: &str) -> io::Result<usize> {
 
     let pattern_bytes = pattern.as_bytes();
 
-    let counts: Vec<_> = (0..num_threads)
-        .map(|i| {
-            let start = i * chunk_size;
-            let end = if i == num_threads - 1 {
-                buffer.len()
-            } else {
-                (i + 1) * chunk_size + pattern_bytes.len() - 1 // Overlap for boundary matches
-            };
+    // Use std::thread::scope so spawned threads can borrow local data
+    let total = std::thread::scope(|s| {
+        let handles: Vec<_> = (0..num_threads)
+            .map(|i| {
+                let start = i * chunk_size;
+                let end = if i == num_threads - 1 {
+                    buffer.len()
+                } else {
+                    (i + 1) * chunk_size + pattern_bytes.len() - 1
+                };
 
-            let chunk = &buffer[start..end.min(buffer.len())];
-            let pattern_owned = pattern.to_string();
+                let chunk = &buffer[start..end.min(buffer.len())];
 
-            std::thread::spawn(move || count_pattern(chunk, pattern_owned.as_bytes()))
-        })
-        .collect();
+                s.spawn(move || count_pattern(chunk, pattern_bytes))
+            })
+            .collect();
 
-    let total: usize = counts.into_iter().map(|h| h.join().unwrap()).sum();
+        handles.into_iter().map(|h| h.join().unwrap()).sum::<usize>()
+    });
 
     Ok(total)
 }

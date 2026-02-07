@@ -67,7 +67,7 @@ impl Block {
     pub fn new(index: u64, data: String, previous_hash: String) -> Self {
         let timestamp = std::time::SystemTime::now()
             .duration_since(std::time::UNIX_EPOCH)
-            .unwrap()
+            .expect("System time before UNIX_EPOCH (1970-01-01); check system clock")
             .as_secs();
 
         let mut block = Block {
@@ -145,6 +145,10 @@ impl Block {
 /// ## Properties
 /// - chain: Vector of blocks (ordered from genesis to latest)
 /// - difficulty: Mining difficulty (number of leading zeros)
+///
+/// ## Invariant
+/// The chain is never empty. It always contains at least the genesis block.
+/// This invariant is maintained by only creating Blockchain via Blockchain::new().
 pub struct Blockchain {
     pub chain: Vec<Block>,
     pub difficulty: usize,
@@ -178,8 +182,13 @@ impl Blockchain {
     ///
     /// ## Parameters
     /// - data: Block contents (transactions in Bitcoin)
+    ///
+    /// ## Safety
+    /// Relies on the invariant that the chain is never empty (always has genesis).
+    /// This is guaranteed by only creating Blockchain via Blockchain::new().
     pub fn add_block(&mut self, data: String) {
         // Get previous block's hash
+        // The invariant ensures chain is never empty, so last() always succeeds
         let previous_hash = self.chain.last().unwrap().hash.clone();
 
         // Create new block

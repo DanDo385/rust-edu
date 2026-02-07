@@ -175,12 +175,16 @@ impl OrderBook {
 
                     // Execute trade at the sell price (taker pays maker's price)
                     let trade_quantity = buy_order.quantity.min(sell_order.quantity);
-                    self.execute_trade(
-                        buy_order.id,
-                        sell_order.id,
-                        ask_price,
-                        trade_quantity,
+
+                    // Inline trade execution to avoid double mutable borrow
+                    let price_display = ask_price as f64 / 100.0;
+                    let quantity_display = trade_quantity as f64 / 10.0;
+                    println!(
+                        "TRADE #{}: Buy Order #{} <-> Sell Order #{} | {} BTC @ ${:.2}",
+                        self.next_trade_id, buy_order.id, sell_order.id,
+                        quantity_display, price_display
                     );
+                    self.next_trade_id += 1;
 
                     buy_order.quantity -= trade_quantity;
                     sell_order.quantity -= trade_quantity;
@@ -226,12 +230,16 @@ impl OrderBook {
 
                     // Execute trade at the buy price (taker pays maker's price)
                     let trade_quantity = sell_order.quantity.min(buy_order.quantity);
-                    self.execute_trade(
-                        buy_order.id,
-                        sell_order.id,
-                        bid_price,
-                        trade_quantity,
+
+                    // Inline trade execution to avoid double mutable borrow
+                    let price_display = bid_price as f64 / 100.0;
+                    let quantity_display = trade_quantity as f64 / 10.0;
+                    println!(
+                        "TRADE #{}: Buy Order #{} <-> Sell Order #{} | {} BTC @ ${:.2}",
+                        self.next_trade_id, buy_order.id, sell_order.id,
+                        quantity_display, price_display
                     );
+                    self.next_trade_id += 1;
 
                     sell_order.quantity -= trade_quantity;
                     buy_order.quantity -= trade_quantity;
@@ -253,19 +261,6 @@ impl OrderBook {
                 break;
             }
         }
-    }
-
-    /// Execute a trade between two orders
-    fn execute_trade(&mut self, buy_id: u64, sell_id: u64, price: u64, quantity: u64) {
-        let price_display = price as f64 / 100.0;
-        let quantity_display = quantity as f64 / 10.0;
-
-        println!(
-            "TRADE #{}: Buy Order #{} <-> Sell Order #{} | {} BTC @ ${:.2}",
-            self.next_trade_id, buy_id, sell_id, quantity_display, price_display
-        );
-
-        self.next_trade_id += 1;
     }
 
     /// Display the current order book

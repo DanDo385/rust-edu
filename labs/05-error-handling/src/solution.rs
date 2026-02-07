@@ -130,5 +130,6 @@ pub fn validate_email(email: &str) -> bool {
     }
 
     // Check that there's a dot after the @
-    email.rfind('.').map_or(false, |pos| pos > email.find('@').unwrap())
+    // We know there is exactly one @ (validated above), so find('@') cannot fail
+    email.rfind('.').map_or(false, |pos| pos > email.find('@').expect("already validated @ exists"))
 }

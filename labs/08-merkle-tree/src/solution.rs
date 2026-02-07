@@ -32,7 +32,7 @@
 //! In production, use a proper cryptographic hash library like sha2.
 
 use std::collections::hash_map::DefaultHasher;
-use std::hash::{Hash, Hasher};
+use std::hash::{Hasher};
 
 /// Simple hash function using Rust's standard library hasher.
 /// This is NOT cryptographically secure - use only for learning!
@@ -88,7 +88,6 @@ impl MerkleTree {
     /// ## Returns
     /// MerkleTree with root and leaves
     pub fn new(data: Vec<String>) -> Self {
-        // Handle empty case
         if data.is_empty() {
             return MerkleTree {
                 root: String::new(),
@@ -96,64 +95,29 @@ impl MerkleTree {
             };
         }
 
-        // ====================================================================
-        // STEP 1: CREATE LEAF HASHES
-        // ====================================================================
-
-        // Hash each data item to create leaves
-        // `.iter()` = iterate over data
-        // `.map(|item| hash_leaf(item))` = hash each item
-        // `.collect()` = collect into Vec<String>
-
-        let mut current_level: Vec<String> = data
+        let mut current_level: Vec<Vec<u8>> = data
             .iter()
             .map(|item| hash_leaf(item))
             .collect();
 
-        // Save leaf hashes (for proof generation later)
-        let leaves = current_level.clone();
-
-        // ====================================================================
-        // STEP 2: BUILD TREE BOTTOM-UP
-        // ====================================================================
-
-        // Keep pairing and hashing until we have one hash (root)
-        // `while current_level.len() > 1` = continue until single hash
+        let leaves_as_bytes = current_level.clone();
 
         while current_level.len() > 1 {
             let mut next_level = Vec::new();
-
-            // Process pairs of hashes
-            // `.chunks(2)` = iterate in pairs
-            //   - Returns chunks of 2 elements
-            //   - Last chunk might have 1 element (odd number)
-
             for chunk in current_level.chunks(2) {
-                // Get left hash (always exists)
                 let left = &chunk[0];
-
-                // Get right hash (duplicate left if odd number)
-                // `chunk.get(1)` = try to get second element
-                //   - Returns Option<&String>
-                //   - Some(&right) if exists
-                //   - None if chunk has only 1 element
-                // `.unwrap_or(left)` = use left if no right
-
-                let right = chunk.get(1).unwrap_or(left);
-
-                // Hash the pair to create parent
+                let right = if chunk.len() > 1 { &chunk[1] } else { left };
                 let parent = hash_pair(left, right);
-
-                // Add parent to next level
                 next_level.push(parent);
             }
-
-            // Move up one level
             current_level = next_level;
         }
 
-        // Root is the final remaining hash
-        let root = current_level[0].clone();
+        let root = bytes_to_hex(&current_level[0]);
+        let leaves = leaves_as_bytes
+            .iter()
+            .map(|hash| bytes_to_hex(hash))
+            .collect();
 
         MerkleTree { root, leaves }
     }
@@ -172,9 +136,8 @@ impl MerkleTree {
 /// Hash a single leaf (transaction).
 ///
 /// In Bitcoin, this is the transaction ID (txid).
-fn hash_leaf(data: &str) -> String {
-    let hash_bytes = simple_hash(data.as_bytes());
-    bytes_to_hex(&hash_bytes)
+fn hash_leaf(data: &str) -> Vec<u8> {
+    simple_hash(data.as_bytes())
 }
 
 /// Hash a pair of nodes.
@@ -188,15 +151,11 @@ fn hash_leaf(data: &str) -> String {
 /// - Always left + right (not right + left)
 /// - Ensures deterministic tree structure
 /// - Bitcoin does: SHA256(SHA256(left || right))
-pub fn hash_pair(left: &str, right: &str) -> String {
-    // Concatenate hashes
-    // `format!("{}{}", left, right)` = combine strings
-
-    let combined = format!("{}{}", left, right);
-
-    // Hash the combination
-    let hash_bytes = simple_hash(combined.as_bytes());
-    bytes_to_hex(&hash_bytes)
+pub fn hash_pair(left: &[u8], right: &[u8]) -> Vec<u8> {
+    let mut combined = Vec::with_capacity(left.len() + right.len());
+    combined.extend_from_slice(left);
+    combined.extend_from_slice(right);
+    simple_hash(&combined)
 }
 
 // ============================================================================

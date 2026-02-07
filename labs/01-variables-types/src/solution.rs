@@ -1150,19 +1150,20 @@ pub fn count_vowels(text: &str) -> usize {
         // `.next()` = gets the first (and usually only) character
         //   - Returns Option<char>
         //   - Some(lowercase_char) if there is one
-        //   - None if... well, there's always one for normal chars
+        //   - None if there are no lowercase characters (rare edge case)
         //
-        // `.unwrap()` = extracts the char from Some(char)
-        //   - Panics if None (but that won't happen here)
-        //   - Safe in this context because chars always have lowercase forms
+        // `.unwrap_or(ch)` = extracts the char from Some(char), or falls back to original
+        //   - Handles edge case where a character has no lowercase form
+        //   - Defensive programming: never panics on unexpected Unicode
+        //   - For normal characters (including all vowels), returns the lowercase
         //
         // Why not just `ch.to_lowercase()`?
         // - to_lowercase() returns an iterator, not a char
         // - This is because some chars lowercase to multiple chars
         // - For English vowels, it's always one char
-        // - We need .next().unwrap() to get the actual char
+        // - We use .next().unwrap_or(ch) for safe extraction
 
-        let ch_lower = ch.to_lowercase().next().unwrap();
+        let ch_lower = ch.to_lowercase().next().unwrap_or(ch);
 
         // Alternative approach (more verbose but clearer):
         // ```rust

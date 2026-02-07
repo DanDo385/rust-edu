@@ -53,13 +53,13 @@ members = [
     "labs/51-concurrent-crawler",
     "labs/52-blockchain-node",
     "labs/53-hft-trading-bot",
-    "labs/54-01-variables-types-alternative",
-    "labs/55-03-ownership-borrowing-alternative",
-    "labs/56-04-structs-methods-alternative",
-    "labs/57-06-traits-interfaces-alternative",
-    "labs/58-08-error-handling-alternative",
-    "labs/59-09-merkle-tree-alternative",
-    "labs/60-10-simple-blockchain-alternative",
+    "labs/54-variables-types-alternative",
+    "labs/55-ownership-borrowing-alternative",
+    "labs/56-structs-methods-alternative",
+    "labs/57-traits-interfaces-alternative",
+    "labs/58-error-handling-alternative",
+    "labs/59-merkle-tree-alternative",
+    "labs/60-simple-blockchain-alternative",
 ]
 
 resolver = "2"

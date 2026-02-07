@@ -101,7 +101,7 @@ impl Wallet {
 
         let now = SystemTime::now()
             .duration_since(UNIX_EPOCH)
-            .unwrap()
+            .expect("System time before UNIX_EPOCH (1970-01-01); check system clock")
             .as_nanos();
 
         // Create secret from timestamp (mock randomness)
