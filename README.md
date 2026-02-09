@@ -31,4 +31,4 @@ Replace `variables-types` with the package name for any lab.
 
 - Labs are intended to be completed sequentially.
 - Integration tests target reference solutions for deterministic grading.
-- Root-level conversion docs are retained as concise maintenance references.
+- See `CLAUDE.md` for project conventions and maintenance guidelines.

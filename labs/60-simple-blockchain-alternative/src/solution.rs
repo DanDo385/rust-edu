@@ -24,6 +24,11 @@
 //! - Rust’s ownership system replaces GC: every block owns its strings, and the `Vec<Block>` owns the block sequence. When `Blockchain` is dropped, the heap bytes are freed automatically.
 //! - Borrow rules keep miners and validators separate: miners take `&mut Block`, validators take `&Block`.
 //! - `clone()` copies heap bytes when we need independent ownership, so earlier blocks remain immutable even after new blocks are added.
+//! 
+//! ## Test-verified invariants (integration_test.rs)
+//! - Genesis block is immutable and always present (index 0, `previous_hash == "0"`).
+//! - Adding a block increments the chain length and links via `previous_hash`, proving the `add_block` invariant.
+//! - `is_valid` recomputes each hash and enforces difficulty per block, demonstrating that validation walks only shared borrows and never mutates the chain.
 
 use sha2::{Digest, Sha256};
 use std::time::{SystemTime, UNIX_EPOCH};
