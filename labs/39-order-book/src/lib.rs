@@ -1,411 +1,136 @@
-// Lab 39: Order Book (Trading Engine)
-//
-// Implements a limit order book matching engine. Demonstrates how exchanges
-// match buy and sell orders using price-time priority, BTreeMap for sorted
-// storage, and VecDeque for FIFO ordering within a price level.
-//
-// Pure std lib -- no external dependencies.
+//! # A Financial Order Book - Your Implementation
+//!
+//! This project involves building the core data structure of a financial
+//! exchange: an order book.
+//!
+//! ## Your Task
+//!
+//! Implement the `OrderBook` and its matching logic.
+//!
+//! 1.  **Data Structures**: Define `Side`, `Order`, `Trade`, and `OrderBook`.
+//!     -   `Order` should contain all the necessary information about an order.
+//!     -   `OrderBook` should hold the `BTreeMap`s for bids and asks.
+//!
+//! 2.  **`new()`**: A constructor for the `OrderBook`.
+//!
+//! 3.  **`add_order()`**: This is the main engine. It takes a new order and
+//!     attempts to match it against the book.
+//!     -   If it's a buy order, match against asks (lowest price first).
+//!     -   If it's a sell order, match against bids (highest price first).
+//!     -   Generate `Trade`s for any matches.
+//!     -   If the incoming order is not fully filled, add the remainder to the book.
+//!
+//! ## Running Your Code
+//!
+//! ```bash
+//! cargo test -p order-book
+//! cargo run -p order-book
+//! ```
+//!
+//! ## Stuck?
+//!
+//! Check out `src/solution.rs` for a complete, heavily-commented solution.
 
-use std::collections::{BTreeMap, VecDeque};
+use std::collections::BTreeMap;
 
-// ============================================================================
-// ORDER SIDE
-// ============================================================================
-
-/// Whether an order is a buy (bid) or sell (ask).
+// TODO: Define the Side enum (Buy or Sell)
+// #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+// pub enum Side { ... }
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum OrderSide {
+pub enum Side {
     Buy,
     Sell,
 }
 
-// ============================================================================
-// ORDER
-// ============================================================================
-
-/// A single limit order in the book.
-///
-/// # Integer Prices
-/// Prices are stored as `u64` in cents (e.g., $501.00 = 50100) to avoid
-/// floating-point rounding errors. Quantity is in tenths of a unit
-/// (e.g., 10 = 1.0 BTC). Real exchanges use fixed-point or decimal types.
-///
-/// # Ownership
-/// Order is Clone + Debug. The `id` and `timestamp` are Copy types.
-/// The entire struct is 40 bytes (5 x u64) and fits in a cache line.
-#[derive(Debug, Clone)]
+// TODO: Define the Order struct
+// It should contain: id, side, price, quantity
+// #[derive(Debug, Clone, Copy)]
+// pub struct Order { ... }
+#[derive(Debug, Clone, Copy)]
 pub struct Order {
     pub id: u64,
-    pub side: OrderSide,
+    pub side: Side,
     pub price: u64,
     pub quantity: u64,
-    pub timestamp: u64,
 }
 
 impl Order {
-    /// Creates a new order. Uses `id` as timestamp for simplicity.
-    ///
-    /// In production, `timestamp` would be actual nanosecond time from
-    /// a high-resolution clock.
-    pub fn new(id: u64, side: OrderSide, price: u64, quantity: u64) -> Self {
-        Order {
+    pub fn new(id: u64, side: Side, price: u64, quantity: u64) -> Self {
+        Self {
             id,
             side,
             price,
             quantity,
-            timestamp: id,
         }
     }
 }
 
-// ============================================================================
-// TRADE
-// ============================================================================
-
-/// A record of an executed trade between two orders.
-///
-/// When a buy order matches a sell order, a Trade is generated.
-/// The trade price is the *maker's* price (the resting order),
-/// which incentivizes providing liquidity.
-#[derive(Debug, Clone, PartialEq)]
+// TODO: Define the Trade struct
+// It should contain: taker_order_id, maker_order_id, quantity, price
+// #[derive(Debug)]
+// pub struct Trade { ... }
+#[derive(Debug)]
 pub struct Trade {
-    pub trade_id: u64,
-    pub buy_order_id: u64,
-    pub sell_order_id: u64,
-    pub price: u64,
+    pub taker_order_id: u64,
+    pub maker_order_id: u64,
     pub quantity: u64,
+    pub price: u64,
 }
 
-// ============================================================================
-// ORDER BOOK
-// ============================================================================
-
-/// A limit order book that maintains buy (bid) and sell (ask) orders,
-/// automatically matching when prices cross.
-///
-/// # Data Structure Choices
-/// - `BTreeMap<u64, VecDeque<Order>>`: Prices are the keys (automatically
-///   sorted). Within each price level, orders are stored in a `VecDeque`
-///   for O(1) FIFO operations (time priority).
-/// - For **bids** (buy): We iterate in *reverse* (highest price first).
-/// - For **asks** (sell): We iterate in *natural* order (lowest price first).
-///
-/// # Ownership
-/// The OrderBook owns all its orders. When an order is fully filled, it is
-/// removed from the VecDeque. When a price level becomes empty, the key is
-/// removed from the BTreeMap.
+// TODO: Define the OrderBook struct
+// It should contain:
+// - bids: A BTreeMap for buy orders
+// - asks: A BTreeMap for sell orders
+// - next_order_id: A counter for assigning unique order IDs
+//
+// The keys of the BTreeMaps should be the price, and the values
+// should be a collection of all orders at that price level,
+// for example, a `Vec<Order>`.
+//
+// pub struct OrderBook { ... }
 pub struct OrderBook {
-    symbol: String,
-    bids: BTreeMap<u64, VecDeque<Order>>,
-    asks: BTreeMap<u64, VecDeque<Order>>,
-    next_trade_id: u64,
-    trades: Vec<Trade>,
+    pub bids: BTreeMap<u64, Vec<Order>>,
+    pub asks: BTreeMap<u64, Vec<Order>>,
 }
+
 
 impl OrderBook {
-    /// Creates a new, empty order book for the given symbol.
-    pub fn new(symbol: &str) -> Self {
-        OrderBook {
-            symbol: symbol.to_string(),
-            bids: BTreeMap::new(),
-            asks: BTreeMap::new(),
-            next_trade_id: 1,
-            trades: Vec::new(),
-        }
+    /// Creates a new, empty `OrderBook`.
+    pub fn new() -> Self {
+        todo!("Initialize the OrderBook");
     }
 
-    /// Returns the trading symbol (e.g., "BTC/USD").
-    pub fn symbol(&self) -> &str {
-        &self.symbol
-    }
-
-    /// Adds an order to the book, attempting to match it first.
+    /// Adds a new order to the book and performs matching.
     ///
-    /// If the order can be partially or fully matched against resting
-    /// orders on the opposite side, trades are generated. Any remaining
-    /// quantity is added to the book as a resting order.
-    ///
-    /// Returns the list of trades generated by this order.
+    /// Returns a vector of trades that were executed.
     pub fn add_order(&mut self, mut order: Order) -> Vec<Trade> {
-        let trades_before = self.trades.len();
-
-        match order.side {
-            OrderSide::Buy => {
-                self.match_buy_order(&mut order);
-                if order.quantity > 0 {
-                    self.bids
-                        .entry(order.price)
-                        .or_insert_with(VecDeque::new)
-                        .push_back(order);
-                }
-            }
-            OrderSide::Sell => {
-                self.match_sell_order(&mut order);
-                if order.quantity > 0 {
-                    self.asks
-                        .entry(order.price)
-                        .or_insert_with(VecDeque::new)
-                        .push_back(order);
-                }
-            }
-        }
-
-        self.trades[trades_before..].to_vec()
-    }
-
-    /// Cancels an order by ID. Returns true if the order was found and removed.
-    ///
-    /// Searches both bids and asks. Within each price level, scans the
-    /// VecDeque for the matching ID. This is O(n) in the worst case;
-    /// production systems use a HashMap<OrderId, ...> index for O(1) lookup.
-    pub fn cancel_order(&mut self, order_id: u64) -> bool {
-        // Search bids
-        for (_, queue) in self.bids.iter_mut() {
-            if let Some(pos) = queue.iter().position(|o| o.id == order_id) {
-                queue.remove(pos);
-                return true;
-            }
-        }
-        // Clean up empty price levels
-        self.bids.retain(|_, q| !q.is_empty());
-
-        // Search asks
-        for (_, queue) in self.asks.iter_mut() {
-            if let Some(pos) = queue.iter().position(|o| o.id == order_id) {
-                queue.remove(pos);
-                return true;
-            }
-        }
-        self.asks.retain(|_, q| !q.is_empty());
-
-        false
-    }
-
-    /// Returns the best (highest) bid price, or None if no bids exist.
-    pub fn best_bid(&self) -> Option<u64> {
-        self.bids.keys().next_back().copied()
-    }
-
-    /// Returns the best (lowest) ask price, or None if no asks exist.
-    pub fn best_ask(&self) -> Option<u64> {
-        self.asks.keys().next().copied()
-    }
-
-    /// Returns the spread (best ask - best bid) in price units,
-    /// or None if either side is empty.
-    pub fn spread(&self) -> Option<i64> {
-        match (self.best_bid(), self.best_ask()) {
-            (Some(bid), Some(ask)) => Some(ask as i64 - bid as i64),
-            _ => None,
-        }
-    }
-
-    /// Returns the total quantity of all buy orders at a given price level.
-    pub fn bid_depth_at(&self, price: u64) -> u64 {
-        self.bids
-            .get(&price)
-            .map(|q| q.iter().map(|o| o.quantity).sum())
-            .unwrap_or(0)
-    }
-
-    /// Returns the total quantity of all sell orders at a given price level.
-    pub fn ask_depth_at(&self, price: u64) -> u64 {
-        self.asks
-            .get(&price)
-            .map(|q| q.iter().map(|o| o.quantity).sum())
-            .unwrap_or(0)
-    }
-
-    /// Returns the number of distinct price levels on the bid side.
-    pub fn bid_levels(&self) -> usize {
-        self.bids.len()
-    }
-
-    /// Returns the number of distinct price levels on the ask side.
-    pub fn ask_levels(&self) -> usize {
-        self.asks.len()
-    }
-
-    /// Returns all trades that have been executed in this order book.
-    pub fn trades(&self) -> &[Trade] {
-        &self.trades
-    }
-
-    /// Returns a snapshot of bid price levels (price, total_quantity),
-    /// sorted from highest to lowest price.
-    pub fn bid_snapshot(&self) -> Vec<(u64, u64)> {
-        self.bids
-            .iter()
-            .rev()
-            .map(|(&price, queue)| {
-                let total: u64 = queue.iter().map(|o| o.quantity).sum();
-                (price, total)
-            })
-            .collect()
-    }
-
-    /// Returns a snapshot of ask price levels (price, total_quantity),
-    /// sorted from lowest to highest price.
-    pub fn ask_snapshot(&self) -> Vec<(u64, u64)> {
-        self.asks
-            .iter()
-            .map(|(&price, queue)| {
-                let total: u64 = queue.iter().map(|o| o.quantity).sum();
-                (price, total)
-            })
-            .collect()
-    }
-
-    // ========================================================================
-    // MATCHING ENGINE (PRIVATE)
-    // ========================================================================
-
-    /// Match a buy order against resting sell orders.
-    ///
-    /// Iterates asks from lowest price upward. A match occurs when
-    /// buy_price >= ask_price. Trades execute at the ask (maker) price.
-    fn match_buy_order(&mut self, buy_order: &mut Order) {
-        let ask_prices: Vec<u64> = self.asks.keys().copied().collect();
-
-        for ask_price in ask_prices {
-            if buy_order.price < ask_price {
-                break;
-            }
-
-            if let Some(ask_queue) = self.asks.get_mut(&ask_price) {
-                while let Some(mut sell_order) = ask_queue.pop_front() {
-                    if buy_order.quantity == 0 {
-                        ask_queue.push_front(sell_order);
-                        break;
-                    }
-
-                    let trade_quantity = buy_order.quantity.min(sell_order.quantity);
-
-                    let trade = Trade {
-                        trade_id: self.next_trade_id,
-                        buy_order_id: buy_order.id,
-                        sell_order_id: sell_order.id,
-                        price: ask_price,
-                        quantity: trade_quantity,
-                    };
-                    self.trades.push(trade);
-                    self.next_trade_id += 1;
-
-                    buy_order.quantity -= trade_quantity;
-                    sell_order.quantity -= trade_quantity;
-
-                    if sell_order.quantity > 0 {
-                        ask_queue.push_front(sell_order);
-                        break;
-                    }
-                }
-
-                if ask_queue.is_empty() {
-                    self.asks.remove(&ask_price);
-                }
-            }
-
-            if buy_order.quantity == 0 {
-                break;
-            }
-        }
-    }
-
-    /// Match a sell order against resting buy orders.
-    ///
-    /// Iterates bids from highest price downward. A match occurs when
-    /// sell_price <= bid_price. Trades execute at the bid (maker) price.
-    fn match_sell_order(&mut self, sell_order: &mut Order) {
-        let bid_prices: Vec<u64> = self.bids.keys().rev().copied().collect();
-
-        for bid_price in bid_prices {
-            if sell_order.price > bid_price {
-                break;
-            }
-
-            if let Some(bid_queue) = self.bids.get_mut(&bid_price) {
-                while let Some(mut buy_order) = bid_queue.pop_front() {
-                    if sell_order.quantity == 0 {
-                        bid_queue.push_front(buy_order);
-                        break;
-                    }
-
-                    let trade_quantity = sell_order.quantity.min(buy_order.quantity);
-
-                    let trade = Trade {
-                        trade_id: self.next_trade_id,
-                        buy_order_id: buy_order.id,
-                        sell_order_id: sell_order.id,
-                        price: bid_price,
-                        quantity: trade_quantity,
-                    };
-                    self.trades.push(trade);
-                    self.next_trade_id += 1;
-
-                    sell_order.quantity -= trade_quantity;
-                    buy_order.quantity -= trade_quantity;
-
-                    if buy_order.quantity > 0 {
-                        bid_queue.push_front(buy_order);
-                        break;
-                    }
-                }
-
-                if bid_queue.is_empty() {
-                    self.bids.remove(&bid_price);
-                }
-            }
-
-            if sell_order.quantity == 0 {
-                break;
-            }
-        }
+        // TODO: Implement the matching logic.
+        // 1. Determine if the order is a Buy or Sell.
+        //
+        // 2. If it's a Buy order:
+        //    - Look at the `asks` book (the sellers).
+        //    - The best ask is the one with the LOWEST price.
+        //    - Loop through the asks as long as the best ask price is less than
+        //      or equal to the new order's price.
+        //    - In the loop, create trades, update quantities, and remove
+        //      filled orders.
+        //
+        // 3. If it's a Sell order:
+        //    - Look at the `bids` book (the buyers).
+        //    - The best bid is the one with the HIGHEST price.
+        //    - A `BTreeMap` is sorted low-to-high, so you'll need to
+        //      iterate in reverse (`.iter_mut().rev()`).
+        //    - Loop and create trades just like for a buy order.
+        //
+        // 4. After the matching loop, if the incoming order still has quantity
+        //    left (`order.quantity > 0`), add it to the correct side of the book.
+        //
+        // 5. Return the list of trades you generated.
+        todo!("Implement the order matching engine");
     }
 }
 
-// ============================================================================
-// UNIT TESTS
-// ============================================================================
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_order_new() {
-        let order = Order::new(1, OrderSide::Buy, 100, 10);
-        assert_eq!(order.id, 1);
-        assert_eq!(order.side, OrderSide::Buy);
-        assert_eq!(order.price, 100);
-        assert_eq!(order.quantity, 10);
-        assert_eq!(order.timestamp, 1);
-    }
-
-    #[test]
-    fn test_order_book_new() {
-        let book = OrderBook::new("BTC/USD");
-        assert_eq!(book.symbol(), "BTC/USD");
-        assert_eq!(book.bid_levels(), 0);
-        assert_eq!(book.ask_levels(), 0);
-    }
-
-    #[test]
-    fn test_order_side_equality() {
-        assert_eq!(OrderSide::Buy, OrderSide::Buy);
-        assert_eq!(OrderSide::Sell, OrderSide::Sell);
-        assert_ne!(OrderSide::Buy, OrderSide::Sell);
-    }
-
-    #[test]
-    fn test_trade_fields() {
-        let trade = Trade {
-            trade_id: 1,
-            buy_order_id: 10,
-            sell_order_id: 20,
-            price: 5000,
-            quantity: 5,
-        };
-        assert_eq!(trade.trade_id, 1);
-        assert_eq!(trade.price, 5000);
-    }
-}
+// Re-export the solution module so people can compare
+#[doc(hidden)]
+pub mod solution;

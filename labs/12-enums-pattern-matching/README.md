@@ -1,43 +1,127 @@
-# Project 05: Enums and Pattern Matching
+# Project 12 - Enums and Pattern Matching
 
-## Overview
-Enums let you define a type with multiple variants. Combined with pattern matching, they create a powerful and safe way to handle different cases. This is one of Rust's most expressive features.
+## What You Will Build
 
-## Concepts Taught
-- **Enum definition** with variants
-- **Enums with data** (variants can hold values)
-- **Pattern matching** with `match`
-- **if let** for simple matches
-- **Option<T>** - Rust's solution to null
-- **Result<T, E>** - error handling
-- **Exhaustive matching**
+You will implement message-processing functions over a data-bearing enum. The goal is to model state variants safely and handle each case explicitly.
 
-## Why Rust Behaves This Way
+## Why This Lab Matters (First Principles)
 
-### No Null Pointers!
-Rust doesn't have null. Instead, it has `Option<T>`:
-- `Some(value)` - contains a value
-- `None` - no value
+Enums encode "one of many valid states" at the type level. Pattern matching is a control-flow proof that every state is handled.
 
-This forces you to handle the "no value" case explicitly, preventing null pointer errors.
+- `Message` variants carry different payload shapes.
+- `match` enforces exhaustiveness at compile time.
+- `Option`-style thinking eliminates null-state ambiguity.
 
-**Tony Hoare** (inventor of null) called it his "billion-dollar mistake". Rust fixes this!
+## Memory Model and Ownership
 
-### Exhaustive Pattern Matching
-The compiler ensures you handle ALL possible cases. This prevents bugs at compile time.
+### High-level ownership flow
 
-## Comparison: Rust vs Go vs Python
+```text
+Message value created by caller
+   |
+   | moved into process_message(msg: Message)
+   v
+match destructures active variant
+   |
+   | payload may move out (e.g., String)
+   v
+function returns owned String description
+```
 
-| Feature | Rust | Go | Python |
-|---------|------|----|----|
-| Null handling | Option<T> | nil + checks | None |
-| Error handling | Result<T, E> | multiple returns | Exceptions |
-| Pattern matching | match (exhaustive) | switch | match (3.10+) |
-| Enums | Algebraic data types | const/iota | Enum class |
+### Stack vs heap in this lab
 
-## Running This Project
+- Stack:
+  - Enum discriminant + inline fields where possible
+  - references in borrowed helpers (`&Message`)
+- Heap:
+  - `String` payload for `Message::Write(String)`
+
+### Concrete memory sketch
+
+```text
+Before:
+  msg = Message::Write(String("hello"))
+
+Stack: msg(discriminant=Write, ptr/len/cap)
+Heap:  ['h','e','l','l','o']
+
+In `process_message(msg)` match arm `Message::Write(text)`:
+- ownership of `String` moves into `text`
+- no clone required unless you choose to clone
+```
+
+### Borrow checker behavior
+
+- `process_message(msg: Message)` consumes ownership intentionally.
+- `variant_size(msg: &Message)` and `is_quit(msg: &Message)` borrow read-only.
+- You cannot move out of `&Message` without cloning; compiler enforces this.
+
+## Rust Mental Models in This Lab
+
+- Immutability by default makes branch logic predictable.
+- Mutability is explicit if you need to edit payload before formatting.
+- Speed: `match` compiles to efficient branching over discriminants.
+- Safety: impossible to forget a variant when `match` is exhaustive.
+
+## Symbol Deep Dive
+
+### `&` and `&mut`
+
+- `&Message` means inspect without taking ownership.
+- Misconception: `&` is a borrow, not "automatic pass-by-reference magic".
+
+### `*`
+
+- `*` may appear as arithmetic multiplication in unrelated helpers.
+- In pattern contexts, `*` would mean dereference for referenced patterns, but that is optional here.
+
+### Additional symbols used here
+
+- `::` for variant paths (`Message::Quit`)
+- `->` return guarantees
+- pattern matching syntax with struct-like and tuple-like variants
+
+## Exercises
+
+1. `process_message`
+- Goal: return readable text for every variant.
+- Constraints: use exhaustive `match`.
+- Edge cases: ensure all payload values appear in output.
+- Success: variant-specific tests pass.
+
+2. `variant_size`
+- Goal: report field count per variant.
+- Constraints: match on borrowed enum.
+- Edge cases: none; deterministic mapping.
+- Success: exact integer outputs.
+
+3. `is_quit`
+- Goal: detect only `Message::Quit`.
+- Constraints: no false positives.
+- Edge cases: all non-quit variants.
+- Success: boolean tests pass.
+
+## What Tests Prove
+
+- Processing tests prove payload extraction and formatting.
+- Size tests prove correct structural understanding of variants.
+- Quit tests prove precise pattern discrimination.
+
+Failure interpretation:
+
+- Missing match arm causes compile-time exhaustiveness error.
+- Wrong payload text usually means destructuring logic is incorrect.
+
+## Performance Notes
+
+- `variant_size` and `is_quit` are O(1).
+- `process_message` may allocate output `String`; input `String` can be moved without clone.
+- Enum dispatch is branch-efficient and cache-friendly for small variants.
+
+## How to Run
 
 ```bash
-cd 05-enums-pattern-matching
-cargo run
+cargo run -p enums-pattern-matching
+cargo test -p enums-pattern-matching
+cargo check -p enums-pattern-matching
 ```

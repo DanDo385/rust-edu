@@ -1,4 +1,4 @@
-use utxo_model::*;
+use utxo_model::solution::*;
 
 // ============================================================================
 // HELPER FUNCTIONS

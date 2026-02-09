@@ -43,7 +43,7 @@
 //!   }
 //!   ```
 //!   vs Rust (no fallthrough, exhaustive):
-//!   ```rust
+//!   ```rust,ignore
 //!   match x {
 //!       1 => println!("one"),
 //!       2 => println!("two"),
@@ -58,7 +58,7 @@
 //!       process(items)
 //!   ```
 //!   vs Rust (explicit):
-//!   ```rust
+//!   ```rust,ignore
 //!   if !items.is_empty() {  // Crystal clear what we're checking
 //!       process(&items);
 //!   }

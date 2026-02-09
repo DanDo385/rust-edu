@@ -3,7 +3,7 @@
 //! These tests demonstrate the Future trait by manually polling futures.
 //! In real async code, the runtime (tokio) handles polling for you.
 
-use async_basics::{
+use async_basics::solution::{
     SimpleFuture, AddFuture, CountingFuture, RetryFuture,
     async_value, async_add, async_multiply, async_sequence,
     explain_async_benefit,

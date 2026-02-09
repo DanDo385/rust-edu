@@ -3,7 +3,7 @@
 // Tests for wallet creation, address generation, UTXO management,
 // transaction construction, fee estimation, and UTXO selection strategies.
 
-use wallet_cli::*;
+use wallet_cli::solution::*;
 
 // ============================================================================
 // WALLET CREATION TESTS

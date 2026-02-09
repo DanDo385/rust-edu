@@ -3,7 +3,10 @@
 // Tests HTML parsing and data extraction functions using static HTML strings.
 // No network access required -- all tests use inline HTML content.
 
-use web_scraper::*;
+use web_scraper::solution::{
+    Article, Heading, Link, extract_all_headings, extract_articles, extract_attribute,
+    extract_headings, extract_links, extract_text_by_selector, extract_title,
+};
 
 // ============================================================================
 // TEST HTML FIXTURES

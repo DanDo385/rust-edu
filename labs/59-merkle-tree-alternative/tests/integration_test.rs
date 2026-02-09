@@ -3,7 +3,7 @@
 //! Tests verify tree construction, root computation, data integrity detection,
 //! proof generation and verification, and edge cases.
 
-use merkle_tree_alternative::*;
+use merkle_tree_alternative::solution::*;
 
 // ============================================================================
 // HASH FUNCTION TESTS

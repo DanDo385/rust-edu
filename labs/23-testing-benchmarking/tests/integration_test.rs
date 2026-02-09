@@ -1,4 +1,4 @@
-use testing_benchmarking::*;
+use testing_benchmarking::solution::*;
 
 // ============================================================================
 // TESTS: BASIC MATH FUNCTIONS

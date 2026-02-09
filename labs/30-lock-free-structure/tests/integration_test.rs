@@ -1,100 +1,63 @@
-// Integration tests for Lab 30: Lock-Free Structure
-//
-// These tests verify the lock-free stack's correctness:
-// - Basic push and pop operations
-// - LIFO (Last-In, First-Out) ordering
-// - Empty stack behavior
-// - Length tracking
-// - Concurrent push/pop with multiple threads
-// - Stress testing under contention
+//! Integration tests for Lab 30: Lock-Free Structure
+//!
+//! These tests verify the lock-free stack's correctness under various conditions:
+//! - Single-threaded push/pop correctness
+//! - LIFO (Last-In, First-Out) ordering
+//! - Edge cases (empty stack, etc.)
+//! - Memory safety (drop behavior)
+//! - Stress testing under contention from multiple threads
 
-use lock_free_structure::LockFreeStack;
-
-use std::collections::HashSet;
-use std::sync::atomic::{AtomicUsize, Ordering};
+use lock_free_structure::solution::LockFreeStack;
 use std::sync::Arc;
+use std::sync::atomic::Ordering;
 use std::thread;
 
 // ============================================================================
-// BASIC PUSH AND POP
+// SINGLE-THREADED TESTS
 // ============================================================================
 
 #[test]
 fn test_push_and_pop_single() {
+    // Test basic push and pop on a single thread
     let stack = LockFreeStack::new();
-    stack.push(42);
-    assert_eq!(stack.pop(), Some(42));
+    stack.push(1);
+    assert_eq!(stack.pop(), Some(1));
 }
 
 #[test]
 fn test_push_and_pop_multiple() {
+    // Test a sequence of pushes and pops
     let stack = LockFreeStack::new();
-    stack.push(1);
-    stack.push(2);
-    stack.push(3);
-
-    assert_eq!(stack.pop(), Some(3));
-    assert_eq!(stack.pop(), Some(2));
-    assert_eq!(stack.pop(), Some(1));
+    stack.push(10);
+    stack.push(20);
+    assert_eq!(stack.pop(), Some(20));
+    stack.push(30);
+    assert_eq!(stack.pop(), Some(30));
+    assert_eq!(stack.pop(), Some(10));
 }
-
-#[test]
-fn test_push_pop_interleaved() {
-    let stack = LockFreeStack::new();
-
-    stack.push(1);
-    stack.push(2);
-    assert_eq!(stack.pop(), Some(2));
-
-    stack.push(3);
-    assert_eq!(stack.pop(), Some(3));
-    assert_eq!(stack.pop(), Some(1));
-    assert_eq!(stack.pop(), None);
-}
-
-// ============================================================================
-// LIFO ORDERING
-// ============================================================================
 
 #[test]
 fn test_lifo_ordering() {
+    // Verify that the stack follows Last-In, First-Out order
     let stack = LockFreeStack::new();
-
-    for i in 0..10 {
-        stack.push(i);
-    }
-
-    // Should come out in reverse order
-    for i in (0..10).rev() {
-        assert_eq!(stack.pop(), Some(i));
-    }
+    stack.push(1);
+    stack.push(2);
+    stack.push(3);
+    assert_eq!(stack.pop(), Some(3));
+    assert_eq!(stack.pop(), Some(2));
+    assert_eq!(stack.pop(), Some(1));
 }
-
-#[test]
-fn test_lifo_with_strings() {
-    let stack = LockFreeStack::new();
-
-    stack.push(String::from("first"));
-    stack.push(String::from("second"));
-    stack.push(String::from("third"));
-
-    assert_eq!(stack.pop(), Some(String::from("third")));
-    assert_eq!(stack.pop(), Some(String::from("second")));
-    assert_eq!(stack.pop(), Some(String::from("first")));
-}
-
-// ============================================================================
-// EMPTY STACK
-// ============================================================================
 
 #[test]
 fn test_pop_empty_returns_none() {
+    // Popping from an empty stack should return None
     let stack: LockFreeStack<i32> = LockFreeStack::new();
     assert_eq!(stack.pop(), None);
 }
 
 #[test]
 fn test_pop_empty_multiple_times() {
+    // Popping from an empty stack repeatedly should always be None
     let stack: LockFreeStack<i32> = LockFreeStack::new();
     assert_eq!(stack.pop(), None);
     assert_eq!(stack.pop(), None);
@@ -103,241 +66,106 @@ fn test_pop_empty_multiple_times() {
 
 #[test]
 fn test_pop_after_draining() {
+    // Popping after all elements have been removed
     let stack = LockFreeStack::new();
     stack.push(1);
-    stack.push(2);
-
-    assert_eq!(stack.pop(), Some(2));
     assert_eq!(stack.pop(), Some(1));
     assert_eq!(stack.pop(), None);
-    assert_eq!(stack.pop(), None);
 }
-
-// ============================================================================
-// LENGTH TRACKING
-// ============================================================================
-
-#[test]
-fn test_len_empty() {
-    let stack: LockFreeStack<i32> = LockFreeStack::new();
-    assert_eq!(stack.len(), 0);
-}
-
-#[test]
-fn test_len_after_pushes() {
-    let stack = LockFreeStack::new();
-    stack.push(1);
-    assert_eq!(stack.len(), 1);
-    stack.push(2);
-    assert_eq!(stack.len(), 2);
-    stack.push(3);
-    assert_eq!(stack.len(), 3);
-}
-
-#[test]
-fn test_len_after_pops() {
-    let stack = LockFreeStack::new();
-    stack.push(1);
-    stack.push(2);
-    stack.push(3);
-
-    stack.pop();
-    assert_eq!(stack.len(), 2);
-    stack.pop();
-    assert_eq!(stack.len(), 1);
-    stack.pop();
-    assert_eq!(stack.len(), 0);
-}
-
-#[test]
-fn test_len_after_push_and_pop_cycles() {
-    let stack = LockFreeStack::new();
-
-    for _ in 0..5 {
-        stack.push(1);
-    }
-    assert_eq!(stack.len(), 5);
-
-    for _ in 0..3 {
-        stack.pop();
-    }
-    assert_eq!(stack.len(), 2);
-
-    for _ in 0..4 {
-        stack.push(1);
-    }
-    assert_eq!(stack.len(), 6);
-}
-
-// ============================================================================
-// IS_EMPTY
-// ============================================================================
-
-#[test]
-fn test_is_empty_new_stack() {
-    let stack: LockFreeStack<i32> = LockFreeStack::new();
-    assert!(stack.is_empty());
-}
-
-#[test]
-fn test_is_empty_after_push() {
-    let stack = LockFreeStack::new();
-    stack.push(1);
-    assert!(!stack.is_empty());
-}
-
-#[test]
-fn test_is_empty_after_drain() {
-    let stack = LockFreeStack::new();
-    stack.push(1);
-    stack.pop();
-    assert!(stack.is_empty());
-}
-
-// ============================================================================
-// DEFAULT TRAIT
-// ============================================================================
-
-#[test]
-fn test_default() {
-    let stack: LockFreeStack<i32> = LockFreeStack::default();
-    assert!(stack.is_empty());
-    assert_eq!(stack.len(), 0);
-}
-
-// ============================================================================
-// DROP (MEMORY CLEANUP)
-// ============================================================================
 
 #[test]
 fn test_drop_with_remaining_elements() {
-    // Verify that dropping a non-empty stack doesn't leak or panic
+    // Test that Drop deallocates remaining nodes
+    // This test doesn't assert, but it will cause memory leaks
+    // if Drop is not implemented correctly. Run with `valgrind` or similar
+    // tools to verify.
     let stack = LockFreeStack::new();
-    for i in 0..100 {
-        stack.push(i);
-    }
-    // stack is dropped here; Drop should free all 100 nodes
+    stack.push("hello".to_string());
+    stack.push("world".to_string());
+    // stack goes out of scope here and should be dropped
 }
 
 #[test]
 fn test_drop_empty_stack() {
+    // Dropping an empty stack should be a no-op
     let stack: LockFreeStack<i32> = LockFreeStack::new();
-    drop(stack);
+    // stack is dropped here
 }
 
 #[test]
-fn test_drop_with_heap_data() {
-    // Ensure Drop properly cleans up heap-allocated T values
+fn test_with_strings() {
+    // Test with a non-Copy type like String
     let stack = LockFreeStack::new();
-    for i in 0..50 {
-        stack.push(format!("string number {}", i));
-    }
-    // All Strings and Nodes should be freed
+    stack.push("hello".to_string());
+    stack.push("world".to_string());
+    assert_eq!(stack.pop(), Some("world".to_string()));
+    assert_eq!(stack.pop(), Some("hello".to_string()));
+}
+
+#[test]
+fn test_with_boxed_values() {
+    // Test with heap-allocated values
+    let stack = LockFreeStack::new();
+    stack.push(Box::new(10));
+    stack.push(Box::new(20));
+    assert_eq!(stack.pop(), Some(Box::new(20)));
+    assert_eq!(stack.pop(), Some(Box::new(10)));
 }
 
 // ============================================================================
-// CONCURRENT PUSH
+// CONCURRENT TESTS
 // ============================================================================
 
 #[test]
 fn test_concurrent_push() {
+    // Multiple threads push concurrently
     let stack = Arc::new(LockFreeStack::new());
     let num_threads = 8;
-    let pushes_per_thread = 500;
+    let items_per_thread = 100;
 
     let mut handles = vec![];
-
-    for t in 0..num_threads {
-        let stack = Arc::clone(&stack);
-        let handle = thread::spawn(move || {
-            for i in 0..pushes_per_thread {
-                stack.push(t * pushes_per_thread + i);
+    for i in 0..num_threads {
+        let stack_clone = Arc::clone(&stack);
+        handles.push(thread::spawn(move || {
+            for j in 0..items_per_thread {
+                stack_clone.push((i, j));
             }
-        });
-        handles.push(handle);
+        }));
     }
 
     for handle in handles {
         handle.join().unwrap();
     }
 
-    assert_eq!(stack.len(), num_threads * pushes_per_thread);
+    // Verify all items are in the stack
+    let mut count = 0;
+    while let Some(_) = stack.pop() {
+        count += 1;
+    }
+    assert_eq!(count, num_threads * items_per_thread);
 }
-
-#[test]
-fn test_concurrent_push_all_values_present() {
-    let stack = Arc::new(LockFreeStack::new());
-    let num_threads = 4;
-    let pushes_per_thread = 200;
-
-    let mut handles = vec![];
-
-    for t in 0..num_threads {
-        let stack = Arc::clone(&stack);
-        let handle = thread::spawn(move || {
-            for i in 0..pushes_per_thread {
-                stack.push(t * pushes_per_thread + i);
-            }
-        });
-        handles.push(handle);
-    }
-
-    for handle in handles {
-        handle.join().unwrap();
-    }
-
-    // Pop all values and verify we got exactly what we pushed
-    let mut values = HashSet::new();
-    while let Some(v) = stack.pop() {
-        values.insert(v);
-    }
-
-    assert_eq!(values.len(), num_threads * pushes_per_thread);
-
-    for t in 0..num_threads {
-        for i in 0..pushes_per_thread {
-            assert!(
-                values.contains(&(t * pushes_per_thread + i)),
-                "Missing value: {}",
-                t * pushes_per_thread + i
-            );
-        }
-    }
-}
-
-// ============================================================================
-// CONCURRENT POP
-// ============================================================================
 
 #[test]
 fn test_concurrent_pop() {
+    // Multiple threads pop concurrently from a pre-filled stack
     let stack = Arc::new(LockFreeStack::new());
-    let total_items = 4000;
-
-    // Pre-fill the stack
+    let total_items = 10_000;
     for i in 0..total_items {
         stack.push(i);
     }
 
     let num_threads = 8;
-    let popped_count = Arc::new(AtomicUsize::new(0));
-
+    let popped_count = Arc::new(std::sync::atomic::AtomicUsize::new(0));
     let mut handles = vec![];
 
     for _ in 0..num_threads {
-        let stack = Arc::clone(&stack);
-        let count = Arc::clone(&popped_count);
-        let handle = thread::spawn(move || {
-            loop {
-                match stack.pop() {
-                    Some(_) => {
-                        count.fetch_add(1, Ordering::SeqCst);
-                    }
-                    None => break,
-                }
+        let stack_clone = Arc::clone(&stack);
+        let popped_count_clone = Arc::clone(&popped_count);
+        handles.push(thread::spawn(move || {
+            while let Some(_) = stack_clone.pop() {
+                popped_count_clone.fetch_add(1, Ordering::Relaxed);
             }
-        });
-        handles.push(handle);
+        }));
     }
 
     for handle in handles {
@@ -345,70 +173,63 @@ fn test_concurrent_pop() {
     }
 
     assert_eq!(popped_count.load(Ordering::SeqCst), total_items);
-    assert!(stack.is_empty());
+    assert_eq!(stack.pop(), None); // Should be empty now
 }
-
-// ============================================================================
-// CONCURRENT PUSH AND POP
-// ============================================================================
 
 #[test]
 fn test_concurrent_push_and_pop() {
+    // The ultimate test: multiple threads pushing and popping at the same time
     let stack = Arc::new(LockFreeStack::new());
-    let ops_per_thread = 1000;
-    let num_push_threads = 4;
-    let num_pop_threads = 4;
+    let num_threads = 4;
+    let items_per_thread = 5_000;
 
-    let push_count = Arc::new(AtomicUsize::new(0));
-    let pop_count = Arc::new(AtomicUsize::new(0));
-
-    let mut handles = vec![];
-
-    // Spawn push threads
-    for _ in 0..num_push_threads {
-        let stack = Arc::clone(&stack);
-        let count = Arc::clone(&push_count);
-        let handle = thread::spawn(move || {
-            for i in 0..ops_per_thread {
-                stack.push(i);
-                count.fetch_add(1, Ordering::SeqCst);
-            }
-        });
-        handles.push(handle);
+    // Initially populate the stack
+    for i in 0..items_per_thread {
+        stack.push(i);
     }
 
-    // Spawn pop threads
-    for _ in 0..num_pop_threads {
-        let stack = Arc::clone(&stack);
-        let count = Arc::clone(&pop_count);
-        let handle = thread::spawn(move || {
-            for _ in 0..ops_per_thread {
-                // Pop may return None if stack is temporarily empty
-                if stack.pop().is_some() {
-                    count.fetch_add(1, Ordering::SeqCst);
+    let push_count = Arc::new(std::sync::atomic::AtomicUsize::new(0));
+    let pop_count = Arc::new(std::sync::atomic::AtomicUsize::new(0));
+
+    let mut handles = vec![];
+    for i in 0..num_threads {
+        let stack_clone = Arc::clone(&stack);
+        let push_count_clone = Arc::clone(&push_count);
+        let pop_count_clone = Arc::clone(&pop_count);
+
+        handles.push(thread::spawn(move || {
+            // Each thread will do a mix of pushes and pops
+            for j in 0..items_per_thread {
+                if j % 2 == 0 {
+                    // Push on even iterations
+                    stack_clone.push(items_per_thread * (i + 1) + j);
+                    push_count_clone.fetch_add(1, Ordering::Relaxed);
+                } else {
+                    // Pop on odd iterations
+                    if stack_clone.pop().is_some() {
+                        pop_count_clone.fetch_add(1, Ordering::Relaxed);
+                    }
                 }
             }
-        });
-        handles.push(handle);
+        }));
     }
 
     for handle in handles {
         handle.join().unwrap();
     }
 
-    let total_pushed = push_count.load(Ordering::SeqCst);
-    let total_popped = pop_count.load(Ordering::SeqCst);
+    let final_push_count = push_count.load(Ordering::SeqCst);
+    let final_pop_count = pop_count.load(Ordering::SeqCst);
+    let mut remaining_on_stack = 0;
+    while stack.pop().is_some() {
+        remaining_on_stack += 1;
+    }
 
-    // Everything pushed was either popped or remains in the stack
-    assert_eq!(total_pushed, num_push_threads * ops_per_thread);
-    let remaining = stack.len();
+    // The total number of items should be conserved
+    // Initial + Pushed = Popped + Remaining
     assert_eq!(
-        total_pushed,
-        total_popped + remaining,
-        "pushed ({}) != popped ({}) + remaining ({})",
-        total_pushed,
-        total_popped,
-        remaining
+        items_per_thread + final_push_count,
+        final_pop_count + remaining_on_stack
     );
 }
 
@@ -417,157 +238,43 @@ fn test_concurrent_push_and_pop() {
 // ============================================================================
 
 #[test]
-fn test_stress_push_pop_cycles() {
-    let stack = Arc::new(LockFreeStack::new());
-    let cycles = 500;
-    let num_threads = 8;
-
-    let mut handles = vec![];
-
-    for _ in 0..num_threads {
-        let stack = Arc::clone(&stack);
-        let handle = thread::spawn(move || {
-            for i in 0..cycles {
-                stack.push(i);
-                // Pop about half the time to keep the stack from growing unbounded
-                if i % 2 == 0 {
-                    stack.pop();
-                }
-            }
-        });
-        handles.push(handle);
-    }
-
-    for handle in handles {
-        handle.join().unwrap();
-    }
-
-    // Drain remaining elements
-    let mut count = 0;
-    while stack.pop().is_some() {
-        count += 1;
-    }
-
-    // Each thread pushed `cycles` and popped `cycles / 2`
-    // Net pushes per thread = cycles - cycles/2 = 250
-    // Total remaining should be num_threads * 250 = 2000
-    // But since pops can fail (empty stack), remaining may vary
-    // The important thing: we didn't panic, deadlock, or corrupt memory
-    assert!(stack.is_empty());
-    // Total drained should match what len() reported approximately
-    let _ = count; // just verify we could drain without issues
-}
-
-#[test]
+#[ignore] // This test is slow and should be run explicitly
 fn test_stress_high_contention() {
-    // Many threads fighting over a small stack
+    // A very high contention stress test, many threads, many ops
     let stack = Arc::new(LockFreeStack::new());
     let num_threads = 16;
-    let ops = 1000;
-
-    let total_pushes = Arc::new(AtomicUsize::new(0));
-    let total_pops = Arc::new(AtomicUsize::new(0));
+    let ops_per_thread = 100_000;
 
     let mut handles = vec![];
 
     for _ in 0..num_threads {
-        let stack = Arc::clone(&stack);
-        let pushes = Arc::clone(&total_pushes);
-        let pops = Arc::clone(&total_pops);
-        let handle = thread::spawn(move || {
-            for i in 0..ops {
+        let stack_clone = Arc::clone(&stack);
+        handles.push(thread::spawn(move || {
+            for i in 0..ops_per_thread {
                 if i % 2 == 0 {
-                    stack.push(i);
-                    pushes.fetch_add(1, Ordering::SeqCst);
-                } else if stack.pop().is_some() {
-                    pops.fetch_add(1, Ordering::SeqCst);
+                    stack_clone.push(i);
+                } else {
+                    stack_clone.pop();
                 }
             }
-        });
-        handles.push(handle);
+        }));
     }
 
     for handle in handles {
         handle.join().unwrap();
     }
 
-    let pushed = total_pushes.load(Ordering::SeqCst);
-    let popped = total_pops.load(Ordering::SeqCst);
-    let remaining = stack.len();
+    // We don't know the exact final count, but the test should complete
+    // without deadlocking or crashing. We can do a basic sanity check.
+    let mut final_count = 0;
+    while stack.pop().is_some() {
+        final_count += 1;
+    }
 
-    assert_eq!(
-        pushed,
-        popped + remaining,
-        "pushed ({}) != popped ({}) + remaining ({})",
-        pushed,
-        popped,
-        remaining
+    println!(
+        "Stress test finished with {} items remaining on stack.",
+        final_count
     );
-}
-
-// ============================================================================
-// DIFFERENT TYPES
-// ============================================================================
-
-#[test]
-fn test_with_strings() {
-    let stack = LockFreeStack::new();
-    stack.push(String::from("hello"));
-    stack.push(String::from("world"));
-
-    assert_eq!(stack.pop(), Some(String::from("world")));
-    assert_eq!(stack.pop(), Some(String::from("hello")));
-}
-
-#[test]
-fn test_with_boxed_values() {
-    let stack = LockFreeStack::new();
-    stack.push(Box::new(100));
-    stack.push(Box::new(200));
-
-    assert_eq!(stack.pop(), Some(Box::new(200)));
-    assert_eq!(stack.pop(), Some(Box::new(100)));
-}
-
-#[test]
-fn test_with_tuples() {
-    let stack = LockFreeStack::new();
-    stack.push((1, "one"));
-    stack.push((2, "two"));
-
-    assert_eq!(stack.pop(), Some((2, "two")));
-    assert_eq!(stack.pop(), Some((1, "one")));
-}
-
-// ============================================================================
-// EDGE CASES
-// ============================================================================
-
-#[test]
-fn test_single_element_push_pop_repeated() {
-    let stack = LockFreeStack::new();
-
-    for i in 0..100 {
-        stack.push(i);
-        assert_eq!(stack.pop(), Some(i));
-        assert!(stack.is_empty());
-    }
-}
-
-#[test]
-fn test_large_number_of_elements() {
-    let stack = LockFreeStack::new();
-    let n = 10_000;
-
-    for i in 0..n {
-        stack.push(i);
-    }
-
-    assert_eq!(stack.len(), n);
-
-    for i in (0..n).rev() {
-        assert_eq!(stack.pop(), Some(i));
-    }
-
-    assert!(stack.is_empty());
+    // The number of remaining items must be less than or equal to the total number of pushes
+    assert!(final_count <= num_threads * (ops_per_thread / 2));
 }

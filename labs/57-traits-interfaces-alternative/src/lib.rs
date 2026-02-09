@@ -1,45 +1,18 @@
-//! # Lab 57: Traits & Interfaces (Alternative)
+//! # Lab 57: Traits & Interfaces (Alternative) - Student API
 //!
-//! Alternative implementation demonstrating Rust's trait system: defining traits,
-//! implementing them for multiple types, default methods, trait bounds, and
-//! dynamic dispatch with trait objects.
-//!
-//! ## Ownership Commentary
-//! - Traits define shared behavior across types (like interfaces in other languages)
-//! - `impl Trait for Type` adds behavior without modifying the type's definition
-//! - `dyn Trait` enables runtime polymorphism via vtable-based dispatch
-//! - Generic functions with trait bounds use static dispatch (monomorphized)
+//! Implement trait-driven polymorphism below.
+//! See `src/solution.rs` for reference.
 
 use std::fmt;
 
-// ============================================================================
-// DESCRIBE TRAIT: Core trait for self-description
-// ============================================================================
-
-/// A trait for types that can describe themselves.
-///
-/// # Teaching Note
-/// Traits are Rust's primary abstraction mechanism. Unlike inheritance in OOP,
-/// traits define behavior that can be shared across unrelated types.
 pub trait Describe {
-    /// Returns a human-readable description of this value.
     fn describe(&self) -> String;
 
-    /// Returns a short label for the type (default implementation).
-    ///
-    /// # Teaching Note
-    /// Default methods provide fallback behavior. Implementors can override
-    /// this or use the default. This is similar to default methods in Java interfaces.
     fn label(&self) -> &str {
-        "unknown"
+        todo!("Provide default label")
     }
 }
 
-// ============================================================================
-// STRUCTS IMPLEMENTING DESCRIBE
-// ============================================================================
-
-/// A person with a name and age.
 #[derive(Debug, Clone, PartialEq)]
 pub struct Person {
     pub name: String,
@@ -47,26 +20,28 @@ pub struct Person {
 }
 
 impl Person {
-    /// Creates a new Person.
-    pub fn new(name: &str, age: u32) -> Person {
-        Person {
-            name: name.to_string(),
-            age,
-        }
+    pub fn new(_name: &str, _age: u32) -> Person {
+        todo!("Construct person")
     }
 }
 
 impl Describe for Person {
     fn describe(&self) -> String {
-        format!("{} is {} years old", self.name, self.age)
+        let _ = self;
+        todo!("Describe person")
     }
 
     fn label(&self) -> &str {
-        "person"
+        todo!("Person label")
     }
 }
 
-/// A car with a brand and year.
+impl fmt::Display for Person {
+    fn fmt(&self, _f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        todo!("Display person")
+    }
+}
+
 #[derive(Debug, Clone, PartialEq)]
 pub struct Car {
     pub brand: String,
@@ -74,26 +49,28 @@ pub struct Car {
 }
 
 impl Car {
-    /// Creates a new Car.
-    pub fn new(brand: &str, year: u32) -> Car {
-        Car {
-            brand: brand.to_string(),
-            year,
-        }
+    pub fn new(_brand: &str, _year: u32) -> Car {
+        todo!("Construct car")
     }
 }
 
 impl Describe for Car {
     fn describe(&self) -> String {
-        format!("{} car from {}", self.brand, self.year)
+        let _ = self;
+        todo!("Describe car")
     }
 
     fn label(&self) -> &str {
-        "car"
+        todo!("Car label")
     }
 }
 
-/// A book with a title and page count.
+impl fmt::Display for Car {
+    fn fmt(&self, _f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        todo!("Display car")
+    }
+}
+
 #[derive(Debug, Clone, PartialEq)]
 pub struct Book {
     pub title: String,
@@ -101,70 +78,43 @@ pub struct Book {
 }
 
 impl Book {
-    pub fn new(title: &str, pages: u32) -> Book {
-        Book {
-            title: title.to_string(),
-            pages,
-        }
+    pub fn new(_title: &str, _pages: u32) -> Book {
+        todo!("Construct book")
     }
 }
 
 impl Describe for Book {
     fn describe(&self) -> String {
-        format!("\"{}\" ({} pages)", self.title, self.pages)
+        let _ = self;
+        todo!("Describe book")
     }
 
     fn label(&self) -> &str {
-        "book"
+        todo!("Book label")
     }
 }
 
-// ============================================================================
-// GENERIC FUNCTION WITH TRAIT BOUNDS
-// ============================================================================
-
-/// Returns the description of any type implementing Describe.
-///
-/// # Memory Model
-/// This function uses STATIC DISPATCH (monomorphization). The compiler generates
-/// a separate version of this function for each concrete type it's called with.
-/// This is zero-cost: no vtable lookup at runtime.
-pub fn get_description<T: Describe>(item: &T) -> String {
-    item.describe()
+pub fn get_description<T: Describe>(_item: &T) -> String {
+    todo!("Call Describe::describe")
 }
 
-/// Returns a formatted string with label and description.
-pub fn labeled_description<T: Describe>(item: &T) -> String {
-    format!("[{}] {}", item.label(), item.describe())
+pub fn labeled_description<T: Describe>(_item: &T) -> String {
+    todo!("Compose label + description")
 }
 
-/// Returns descriptions of all items in a slice using dynamic dispatch.
-///
-/// # Memory Model
-/// `&[&dyn Describe]` uses DYNAMIC DISPATCH. Each element is a fat pointer
-/// (data pointer + vtable pointer = 16 bytes). The vtable is looked up at
-/// runtime to call the correct `describe()` implementation.
-pub fn describe_all(items: &[&dyn Describe]) -> Vec<String> {
-    items.iter().map(|item| item.describe()).collect()
+pub fn describe_all(_items: &[&dyn Describe]) -> Vec<String> {
+    todo!("Describe heterogeneous values via trait objects")
 }
 
-// ============================================================================
-// SUMMARY TRAIT: Default implementations
-// ============================================================================
-
-/// A trait with a required method and a default method.
 pub trait Summary {
-    /// Required: must be implemented by each type.
-    fn summarize_author(&self) -> String;
+    fn summarize(&self) -> String;
 
-    /// Default implementation that uses summarize_author().
-    fn summarize(&self) -> String {
-        format!("(Read more from {}...)", self.summarize_author())
+    fn summarize_author(&self) -> String {
+        todo!("Default author summary")
     }
 }
 
-/// An article that implements Summary.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct Article {
     pub author: String,
     pub title: String,
@@ -172,124 +122,75 @@ pub struct Article {
 }
 
 impl Article {
-    pub fn new(author: &str, title: &str, content: &str) -> Article {
-        Article {
-            author: author.to_string(),
-            title: title.to_string(),
-            content: content.to_string(),
-        }
+    pub fn new(_author: &str, _title: &str, _content: &str) -> Article {
+        todo!("Construct article")
     }
 }
 
 impl Summary for Article {
-    fn summarize_author(&self) -> String {
-        self.author.clone()
+    fn summarize(&self) -> String {
+        let _ = self;
+        todo!("Summarize article")
     }
-    // Uses default summarize() implementation
+
+    fn summarize_author(&self) -> String {
+        let _ = self;
+        todo!("Summarize article author")
+    }
 }
 
-// ============================================================================
-// ANIMAL TRAIT: Dynamic dispatch example
-// ============================================================================
-
-/// A trait for animals that make sounds.
 pub trait Animal {
     fn make_sound(&self) -> String;
     fn animal_type(&self) -> &str;
 }
 
-/// A dog that says "Woof!".
-#[derive(Debug)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct Dog {
     pub name: String,
 }
 
 impl Dog {
-    pub fn new(name: &str) -> Dog {
-        Dog {
-            name: name.to_string(),
-        }
+    pub fn new(_name: &str) -> Dog {
+        todo!("Construct dog")
     }
 }
 
 impl Animal for Dog {
     fn make_sound(&self) -> String {
-        String::from("Woof!")
+        let _ = self;
+        todo!("Dog sound")
     }
 
     fn animal_type(&self) -> &str {
-        "dog"
+        todo!("Dog type")
     }
 }
 
-/// A cat that says "Meow!".
-#[derive(Debug)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct Cat {
     pub name: String,
 }
 
 impl Cat {
-    pub fn new(name: &str) -> Cat {
-        Cat {
-            name: name.to_string(),
-        }
+    pub fn new(_name: &str) -> Cat {
+        todo!("Construct cat")
     }
 }
 
 impl Animal for Cat {
     fn make_sound(&self) -> String {
-        String::from("Meow!")
+        let _ = self;
+        todo!("Cat sound")
     }
 
     fn animal_type(&self) -> &str {
-        "cat"
+        todo!("Cat type")
     }
 }
 
-/// Collects sounds from a slice of boxed animal trait objects.
-pub fn collect_sounds(animals: &[Box<dyn Animal>]) -> Vec<String> {
-    animals.iter().map(|a| a.make_sound()).collect()
+pub fn collect_sounds(_animals: &[Box<dyn Animal>]) -> Vec<String> {
+    todo!("Collect sounds from trait objects")
 }
 
-// ============================================================================
-// Display TRAIT IMPLEMENTATION
-// ============================================================================
-
-impl fmt::Display for Person {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{} (age {})", self.name, self.age)
-    }
-}
-
-impl fmt::Display for Car {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{} ({})", self.brand, self.year)
-    }
-}
-
-// ============================================================================
-// UNIT TESTS
-// ============================================================================
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_person_describe() {
-        let p = Person::new("Alice", 30);
-        assert_eq!(p.describe(), "Alice is 30 years old");
-    }
-
-    #[test]
-    fn test_car_describe() {
-        let c = Car::new("Toyota", 2020);
-        assert_eq!(c.describe(), "Toyota car from 2020");
-    }
-
-    #[test]
-    fn test_get_description_generic() {
-        let p = Person::new("Bob", 25);
-        assert_eq!(get_description(&p), "Bob is 25 years old");
-    }
-}
+#[doc(hidden)]
+pub mod solution;

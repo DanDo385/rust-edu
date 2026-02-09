@@ -1,4 +1,4 @@
-// Project 02: Control Flow and Functions
+// Project 03: Control Flow and Functions
 //
 // This program demonstrates Rust's control flow structures through a number
 // guessing game. We'll explore if/else, loops, match expressions, and functions.

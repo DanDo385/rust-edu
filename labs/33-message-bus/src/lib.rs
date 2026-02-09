@@ -1,157 +1,125 @@
-// Lab 33: Message Bus (Pub/Sub) - Library
-//
-// An async publish-subscribe message bus using Tokio.
-// Demonstrates event-driven architecture, async message passing, and channel-based
-// communication. This is the foundation of microservices and event-driven systems.
-//
-// ============================================================================
-// OWNERSHIP & MEMORY MODEL
-// ============================================================================
-// The MessageBus uses Arc<RwLock<HashMap<String, Vec<Sender>>>> to allow:
-// - Arc: multiple owners across async tasks (shared ownership, thread-safe)
-// - RwLock: multiple readers OR one writer at a time (tokio async-aware)
-// - HashMap: maps topic names (String) to subscriber lists
-// - Vec<Sender>: each subscriber has an mpsc::Sender channel endpoint
-//
-// Messages are cloned for each subscriber. For large messages, wrapping in
-// Arc<Message> avoids expensive cloning. The bounded channel (capacity 100)
-// applies backpressure to prevent unbounded memory growth.
+//! # An Async Message Bus - Your Implementation
+//!
+//! This project is about building a concurrent, asynchronous, topic-based
+//! message bus using Tokio.
+//!
+//! ## Your Task
+//!
+//! Implement the `MessageBus` and its methods.
+//!
+//! 1.  **`MessageBus` Struct**: This struct will hold the shared state of your bus.
+//!     The state should be a `HashMap` mapping topic `String`s to broadcast
+//!     senders. This state needs to be safely shared across threads, so you'll
+//!     wrap it in `Arc<Mutex<...>>`.
+//!
+//! 2.  **`new()`**: A simple constructor for your `MessageBus`.
+//!
+//! 3.  **`subscribe()`**: An `async` method that allows a task to start listening
+//!     to a topic. It should return a `broadcast::Receiver`. If the topic doesn't
+//!     exist, it should be created on the fly.
+//!
+//! 4.  **`publish()`**: An `async` method that sends a message to all subscribers
+//!     of a given topic.
+//!
+//! ## Running Your Code
+//!
+//! ```bash
+//! cargo test -p message-bus
+//! cargo run -p message-bus
+//! ```
+//!
+//! ## Stuck?
+//!
+//! Check out `src/solution.rs` for a complete, heavily-commented solution.
 
 use std::collections::HashMap;
 use std::sync::Arc;
-use tokio::sync::{mpsc, RwLock};
+use tokio::sync::{broadcast, Mutex};
+use bytes::Bytes;
 
-// ============================================================================
-// MESSAGE TYPE
-// ============================================================================
-// For this implementation, messages are Strings.
-// In production, use an enum or trait object for different message types.
+/// A simple type alias for messages. `Bytes` is an efficient, clonable
+/// view over a byte buffer.
+pub type Message = Bytes;
 
-/// The type used for messages in the bus. Currently a simple String.
-pub type Message = String;
-
-// ============================================================================
-// BUS STATISTICS
-// ============================================================================
-
-/// Statistics about the current state of the message bus.
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub struct BusStats {
-    /// Number of topics that have at least one subscriber.
-    pub topics: usize,
-    /// Total number of subscribers across all topics.
-    pub subscribers: usize,
+// TODO: Define the shared state of the message bus.
+// It should be a struct that contains a `HashMap` mapping topic names (String)
+// to `broadcast::Sender<Message>`.
+//
+// struct BusState {
+//     topics: HashMap<String, broadcast::Sender<Message>>,
+// }
+struct BusState {
+    topics: HashMap<String, broadcast::Sender<Message>>,
 }
 
-// ============================================================================
-// MESSAGE BUS STRUCTURE
-// ============================================================================
-
-/// An async publish-subscribe message bus.
-///
-/// The bus routes messages by topic: publishers send to a topic name,
-/// and all subscribers on that topic receive a copy. This is the
-/// "broadcast" (one-to-many) pattern.
-///
-/// Thread-safe and cloneable thanks to Arc internals. Clone a MessageBus
-/// to share it across async tasks.
+// TODO: Define the MessageBus struct.
+// It should contain the shared state, wrapped in `Arc<Mutex<...>>` for
+// thread-safe sharing.
+//
+// #[derive(Clone)]
+// pub struct MessageBus {
+//     state: Arc<Mutex<BusState>>,
+// }
 #[derive(Clone)]
 pub struct MessageBus {
-    /// Map from topic name to list of subscriber channel senders.
-    /// RwLock allows concurrent reads (publish) with exclusive writes (subscribe).
-    topics: Arc<RwLock<HashMap<String, Vec<mpsc::Sender<Message>>>>>,
+    state: Arc<Mutex<BusState>>,
 }
+
 
 impl MessageBus {
-    /// Creates a new, empty message bus with no topics or subscribers.
+    /// Creates a new, empty `MessageBus`.
     pub fn new() -> Self {
-        MessageBus {
-            topics: Arc::new(RwLock::new(HashMap::new())),
-        }
+        // TODO: Initialize the `MessageBus` with a new, empty state.
+        // The state should be wrapped in an `Arc` and a `Mutex`.
+        todo!("Initialize MessageBus with empty state");
     }
 
-    /// Subscribes to a topic, returning an mpsc::Receiver for incoming messages.
+    /// Subscribes to a topic, returning a `Receiver` to listen for messages.
     ///
-    /// The returned receiver will receive all messages published to `topic`
-    /// after this subscription is created. The internal channel is bounded
-    /// with a capacity of 100 to apply backpressure.
-    ///
-    /// Dropping the returned Receiver effectively unsubscribes (the Sender
-    /// will detect a closed channel on the next publish).
-    pub async fn subscribe(&self, topic: &str) -> mpsc::Receiver<Message> {
-        let (tx, rx) = mpsc::channel(100);
-
-        let mut topics = self.topics.write().await;
-        topics
-            .entry(topic.to_string())
-            .or_insert_with(Vec::new)
-            .push(tx);
-
-        rx
+    /// If the topic does not exist, it is created.
+    pub async fn subscribe(&self, topic: String) -> broadcast::Receiver<Message> {
+        // TODO: Implement the subscribe logic.
+        // 1. Lock the mutex to get access to the state.
+        //    `let mut state = self.state.lock().await;`
+        //
+        // 2. Check if the topic exists in the `HashMap` using `entry()`.
+        //    The `entry()` API is perfect for this "get or insert" logic.
+        //    `state.topics.entry(topic).or_insert_with(|| ... )`
+        //
+        // 3. If the topic is new, create a new `broadcast::channel` and
+        //    store the `Sender` part.
+        //
+        // 4. Call `subscribe()` on the `Sender` (whether it's old or new)
+        //    to get a new `Receiver`.
+        //
+        // 5. Return the `Receiver`. The `MutexGuard` is automatically
+        //    unlocked when it goes out of scope.
+        todo!("Implement the subscribe method");
     }
 
-    /// Publishes a message to all subscribers of the given topic.
+    /// Publishes a message to a topic.
     ///
-    /// If the topic has no subscribers, the message is silently dropped.
-    /// If a subscriber's channel is closed (receiver dropped), that send
-    /// fails silently -- use `cleanup()` to remove dead subscribers.
-    ///
-    /// Returns the number of subscribers that successfully received the message.
-    pub async fn publish(&self, topic: &str, message: Message) -> usize {
-        let topics = self.topics.read().await;
-
-        let mut delivered = 0;
-        if let Some(subscribers) = topics.get(topic) {
-            for subscriber in subscribers.iter() {
-                if subscriber.send(message.clone()).await.is_ok() {
-                    delivered += 1;
-                }
-            }
-        }
-
-        delivered
-    }
-
-    /// Removes disconnected subscribers (those whose Receiver has been dropped).
-    ///
-    /// Also removes topics that have no remaining subscribers.
-    /// Call this periodically in long-running applications to prevent
-    /// accumulation of dead subscriber entries.
-    pub async fn cleanup(&self) {
-        let mut topics = self.topics.write().await;
-
-        for (_topic, subscribers) in topics.iter_mut() {
-            subscribers.retain(|sub| !sub.is_closed());
-        }
-
-        topics.retain(|_topic, subs| !subs.is_empty());
-    }
-
-    /// Returns statistics about the current state of the bus.
-    ///
-    /// Note: subscriber counts include disconnected subscribers that
-    /// have not yet been cleaned up.
-    pub async fn stats(&self) -> BusStats {
-        let topics = self.topics.read().await;
-
-        let topic_count = topics.len();
-        let subscriber_count: usize = topics.values().map(|v| v.len()).sum();
-
-        BusStats {
-            topics: topic_count,
-            subscribers: subscriber_count,
-        }
-    }
-
-    /// Returns the list of topic names that currently have subscribers.
-    pub async fn topic_names(&self) -> Vec<String> {
-        let topics = self.topics.read().await;
-        topics.keys().cloned().collect()
+    /// The message is sent to all active subscribers. Returns the number
+    /// of subscribers the message was sent to.
+    pub async fn publish(&self, topic: String, message: Message) -> usize {
+        // TODO: Implement the publish logic.
+        // 1. Lock the mutex to get access to the state.
+        //    `let state = self.state.lock().await;`
+        //
+        // 2. Find the `Sender` for the given topic in the `HashMap`.
+        //
+        // 3. If a `Sender` exists, call its `send()` method. The `send()`
+        //    method returns a `Result`. If `Ok`, the value inside is the
+        //    number of receivers the message was sent to. If no one is
+        //    listening, `send` will return an `Err`, in which case you
+        //    can return 0.
+        //
+        // 4. If the topic does not exist, no one is subscribed, so return 0.
+        todo!("Implement the publish method");
     }
 }
 
-impl Default for MessageBus {
-    fn default() -> Self {
-        Self::new()
-    }
-}
+
+// Re-export the solution module so people can compare
+#[doc(hidden)]
+pub mod solution;

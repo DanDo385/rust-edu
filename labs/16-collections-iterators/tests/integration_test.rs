@@ -1,6 +1,6 @@
 //! Integration tests for Lab 16: Collections & Iterators
 
-use collections_iterators::*;
+use collections_iterators::solution::*;
 
 #[test]
 fn test_sum_evens_mixed() {

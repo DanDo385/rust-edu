@@ -1,5 +1,4 @@
-//! # Transaction Validation - Complete Solution with Blockchain Context
-//!
+//! # Lab 10: Transaction Validation
 //! ## What are Digital Signatures?
 //!
 //! Digital signatures prove ownership without revealing private keys:

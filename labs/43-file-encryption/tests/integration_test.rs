@@ -3,7 +3,7 @@
 // Tests XOR cipher encrypt/decrypt roundtrips, edge cases,
 // different key sizes, and file-based encryption.
 
-use file_encryption::*;
+use file_encryption::solution::{decrypt_file, encrypt_file, encrypt_file_buffered, xor_cipher, xor_decrypt, xor_encrypt};
 use std::fs;
 
 // ============================================================================

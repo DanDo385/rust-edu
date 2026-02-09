@@ -1,6 +1,6 @@
 //! Integration tests for Lab 13: Generics & Trait Bounds
 
-use generics_bounds::*;
+use generics_bounds::solution::*;
 
 #[test]
 fn test_largest_i32() {

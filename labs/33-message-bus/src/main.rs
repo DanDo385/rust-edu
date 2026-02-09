@@ -1,155 +1,116 @@
-// Lab 33: Message Bus (Pub/Sub) - Demo
-//
-// An async publish-subscribe message bus using Tokio.
-// Demonstrates event-driven architecture, async message passing, and channel-based
-// communication. This is the foundation of microservices and event-driven systems.
+//! # An Async Message Bus - Interactive Demo
+//! 
+//! This binary demonstrates the `MessageBus` from our library by simulating
+//! a simple chat system with different rooms (topics).
+//! Run with: cargo run -p message-bus
 
-use message_bus::MessageBus;
+use message_bus::solution::{MessageBus, Message};
+use std::sync::Arc;
+use tokio::time::{sleep, Duration};
 
+// Use the `tokio::main` macro to automatically set up the async runtime.
 #[tokio::main]
 async fn main() {
-    println!("=== Async Message Bus (Pub/Sub) ===\n");
+    println!("=== Async Message Bus Demo ===\n");
+
+    let bus = Arc::new(MessageBus::new());
 
     // ============================================================================
-    // BASIC PUB/SUB
+    // DEMO: Spawn subscribers for different topics
     // ============================================================================
-    demo_basic_pubsub().await;
+
+    println!("Spawning subscribers for topics 'general' and 'random'...");
+
+    // Subscriber 1: Listens to 'general'
+    let bus_clone1 = Arc::clone(&bus);
+    tokio::spawn(async move {
+        let mut rx = bus_clone1.subscribe("general".to_string()).await;
+        println!("   [Subscriber 1] Listening on #general");
+        loop {
+            match rx.recv().await {
+                Ok(msg) => println!("   [Subscriber 1 / #general] Received: {}", String::from_utf8_lossy(&msg)),
+                Err(e) => {
+                    println!("   [Subscriber 1 / #general] Error: {:?}", e);
+                    break;
+                }
+            }
+        }
+    });
+
+    // Subscriber 2: Listens to 'general' AND 'random'
+    let bus_clone2 = Arc::clone(&bus);
+    tokio::spawn(async move {
+        let mut rx_general = bus_clone2.subscribe("general".to_string()).await;
+        let mut rx_random = bus_clone2.subscribe("random".to_string()).await;
+        println!("   [Subscriber 2] Listening on #general and #random");
+        
+        loop {
+            tokio::select! {
+                Ok(msg) = rx_general.recv() => {
+                    println!("   [Subscriber 2 / #general] Received: {}", String::from_utf8_lossy(&msg));
+                },
+                Ok(msg) = rx_random.recv() => {
+                    println!("   [Subscriber 2 / #random] Received: {}", String::from_utf8_lossy(&msg));
+                },
+                else => break,
+            }
+        }
+    });
+
+    // Subscriber 3: Listens only to 'random'
+    let bus_clone3 = Arc::clone(&bus);
+    tokio::spawn(async move {
+        let mut rx = bus_clone3.subscribe("random".to_string()).await;
+        println!("   [Subscriber 3] Listening on #random");
+        loop {
+            match rx.recv().await {
+                Ok(msg) => println!("   [Subscriber 3 / #random] Received: {}", String::from_utf8_lossy(&msg)),
+                Err(e) => {
+                    println!("   [Subscriber 3 / #random] Error: {:?}", e);
+                    break;
+                }
+            }
+        }
+    });
+
+    // Give subscribers a moment to start up
+    sleep(Duration::from_millis(100)).await;
+    println!("\nSubscribers are ready. Starting to publish messages...\n");
 
     // ============================================================================
-    // MULTIPLE SUBSCRIBERS
+    // DEMO: Publish messages
     // ============================================================================
-    demo_multiple_subscribers().await;
 
-    // ============================================================================
-    // MULTIPLE TOPICS
-    // ============================================================================
-    demo_multiple_topics().await;
+    let msg1: Message = "Hello, everyone!".into();
+    println!("Publishing '{}' to #general...", String::from_utf8_lossy(&msg1));
+    let count1 = bus.publish("general".to_string(), msg1).await;
+    println!("   -> Sent to {} subscribers.\n", count1);
+    sleep(Duration::from_millis(200)).await;
 
-    // ============================================================================
-    // UNSUBSCRIBE
-    // ============================================================================
-    demo_unsubscribe().await;
+    let msg2: Message = "Does anyone have a joke?".into();
+    println!("Publishing '{}' to #random...", String::from_utf8_lossy(&msg2));
+    let count2 = bus.publish("random".to_string(), msg2).await;
+    println!("   -> Sent to {} subscribers.\n", count2);
+    sleep(Duration::from_millis(200)).await;
+
+    let msg3: Message = "This is an important announcement!".into();
+    println!("Publishing '{}' to #general...", String::from_utf8_lossy(&msg3));
+    let count3 = bus.publish("general".to_string(), msg3).await;
+    println!("   -> Sent to {} subscribers.\n", count3);
+    sleep(Duration::from_millis(200)).await;
+    
+    let msg4: Message = "This message is for a topic no one is listening to.".into();
+    println!("Publishing to #private...");
+    let count4 = bus.publish("private".to_string(), msg4).await;
+    println!("   -> Sent to {} subscribers.\n", count4);
+    sleep(Duration::from_millis(200)).await;
+
+
+    println!("=== Demo Complete! ===");
+    println!("(The program will hang here as subscriber tasks are still running.)");
+    println!("(Press Ctrl+C to exit.)");
+    
+    // In a real app, you'd have a shutdown signal to gracefully end tasks.
+    // For this demo, we let them run forever.
+    // sleep(Duration::from_secs(1)).await; // Allow last messages to be printed
 }
-
-async fn demo_basic_pubsub() {
-    println!("=== Basic Publish-Subscribe ===\n");
-
-    let bus = MessageBus::new();
-
-    // Subscribe to "news" topic
-    let mut subscriber = bus.subscribe("news").await;
-
-    // Publish some messages
-    let count = bus.publish("news", "Breaking: Rust 2.0 announced!".to_string()).await;
-    println!("Published to {} subscriber(s)", count);
-    let count = bus.publish("news", "Tokio becomes sentient".to_string()).await;
-    println!("Published to {} subscriber(s)", count);
-
-    // Receive messages
-    if let Some(msg) = subscriber.recv().await {
-        println!("Subscriber received: {}", msg);
-    }
-    if let Some(msg) = subscriber.recv().await {
-        println!("Subscriber received: {}", msg);
-    }
-
-    println!();
-}
-
-async fn demo_multiple_subscribers() {
-    println!("=== Multiple Subscribers (Broadcast) ===\n");
-
-    let bus = MessageBus::new();
-
-    let mut sub1 = bus.subscribe("alerts").await;
-    let mut sub2 = bus.subscribe("alerts").await;
-    let mut sub3 = bus.subscribe("alerts").await;
-
-    let count = bus.publish("alerts", "System alert: High CPU usage".to_string()).await;
-    println!("Published to {} subscriber(s)", count);
-
-    println!("Subscriber 1 received: {:?}", sub1.recv().await);
-    println!("Subscriber 2 received: {:?}", sub2.recv().await);
-    println!("Subscriber 3 received: {:?}", sub3.recv().await);
-
-    println!();
-}
-
-async fn demo_multiple_topics() {
-    println!("=== Multiple Topics ===\n");
-
-    let bus = MessageBus::new();
-
-    let mut orders_sub = bus.subscribe("orders").await;
-    let mut payments_sub = bus.subscribe("payments").await;
-    let mut users_sub = bus.subscribe("users").await;
-
-    bus.publish("orders", "Order #123 created".to_string()).await;
-    bus.publish("payments", "Payment $50 processed".to_string()).await;
-    bus.publish("users", "User 'alice' registered".to_string()).await;
-
-    println!("Orders: {:?}", orders_sub.recv().await);
-    println!("Payments: {:?}", payments_sub.recv().await);
-    println!("Users: {:?}", users_sub.recv().await);
-
-    println!();
-}
-
-async fn demo_unsubscribe() {
-    println!("=== Unsubscribe ===\n");
-
-    let bus = MessageBus::new();
-
-    let mut sub = bus.subscribe("events").await;
-
-    bus.publish("events", "Event 1".to_string()).await;
-    println!("Before unsubscribe: {:?}", sub.recv().await);
-
-    // Unsubscribe by dropping the receiver
-    drop(sub);
-
-    let count = bus.publish("events", "Event 2 (not received)".to_string()).await;
-    println!("After unsubscribe: published to {} subscriber(s)", count);
-
-    println!();
-}
-
-// ============================================================================
-// WHAT RUST DOES UNDER THE HOOD
-// ============================================================================
-//
-// 1. ASYNC/AWAIT
-//    - async fn returns a Future
-//    - await suspends the future until result is ready
-//    - Tokio scheduler multiplexes futures on threads
-//    - Zero-cost abstraction (compiles to state machine)
-//
-// 2. MPSC CHANNEL (tokio)
-//    - Lock-free queue implementation
-//    - Sender clones increment reference count
-//    - Bounded channel applies backpressure when full
-//    - Very fast: ~100-500 ns per message
-//
-// 3. RWLOCK (tokio)
-//    - Allows multiple readers OR one writer
-//    - Async-aware (yields to other tasks when waiting)
-//    - Used for topics HashMap (rarely written, often read)
-//    - Faster than Mutex for read-heavy workloads
-//
-// 4. ARC (ATOMIC REFERENCE COUNTING)
-//    - Thread-safe shared ownership
-//    - Clone increments count atomically
-//    - Dropped when count reaches zero
-//    - Minimal overhead (~2 atomic operations per clone/drop)
-
-// ============================================================================
-// KEY TAKEAWAYS
-// ============================================================================
-// 1. Pub/sub decouples publishers from subscribers
-// 2. Topic-based routing allows flexible message distribution
-// 3. Async channels enable non-blocking message passing
-// 4. RwLock is ideal for read-heavy data structures
-// 5. Bounded channels prevent memory exhaustion
-// 6. Background tasks process messages concurrently
-// 7. Cleanup removes disconnected subscribers
-// 8. In-process message bus is extremely fast (<10 us latency)

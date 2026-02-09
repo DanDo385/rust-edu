@@ -4,7 +4,7 @@
 // starting a web server or requiring async runtime. All business
 // logic is tested synchronously through the store API.
 
-use web_server_axum::*;
+use web_server_axum::solution::*;
 
 // ============================================================================
 // STORE CREATION TESTS

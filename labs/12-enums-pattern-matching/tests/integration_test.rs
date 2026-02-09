@@ -1,6 +1,6 @@
 //! Integration tests for Lab 12: Enums & Pattern Matching
 
-use enums_pattern_matching::*;
+use enums_pattern_matching::solution::*;
 
 #[test]
 fn test_process_quit() {

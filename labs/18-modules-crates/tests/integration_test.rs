@@ -6,9 +6,10 @@
 //! - Private modules (like utils) are invisible
 //! - We use pub use re-exports for cleaner imports
 
-use modules_crates::models::User;
-use modules_crates::services::auth::authenticate;
-use modules_crates::prelude::*;
+use modules_crates::solution;
+use solution::models::User;
+use solution::services::auth::authenticate;
+use solution::prelude::*;
 
 // ============================================================================
 // BASIC MODULE ACCESS TESTS
@@ -17,7 +18,7 @@ use modules_crates::prelude::*;
 #[test]
 fn test_user_creation_from_models_module() {
     // Demonstrates accessing User through models module
-    let user = modules_crates::models::User::new(
+    let user = solution::models::User::new(
         "alice".to_string(),
         "alice@example.com".to_string(),
     );
@@ -191,7 +192,7 @@ fn test_auth_token_validity() {
 
 #[test]
 fn test_auth_service_creation() {
-    let service = modules_crates::services::auth::AuthService::new(
+    let service = solution::services::auth::AuthService::new(
         "MyAuthService".to_string(),
     );
     let user = User::new("quinn".to_string(), "quinn@example.com".to_string());
@@ -202,7 +203,7 @@ fn test_auth_service_creation() {
 
 #[test]
 fn test_auth_service_default() {
-    let service = modules_crates::services::auth::AuthService::default();
+    let service = solution::services::auth::AuthService::default();
     let user = User::new("rachel".to_string(), "rachel@example.com".to_string());
 
     let token = service.authenticate(&user);
@@ -211,7 +212,7 @@ fn test_auth_service_default() {
 
 #[test]
 fn test_auth_service_verify_token() {
-    let service = modules_crates::services::auth::AuthService::default();
+    let service = solution::services::auth::AuthService::default();
     let user = User::new("sam".to_string(), "sam@example.com".to_string());
 
     let token = service.authenticate(&user);
@@ -220,7 +221,7 @@ fn test_auth_service_verify_token() {
 
 #[test]
 fn test_auth_service_verify_wrong_user() {
-    let service = modules_crates::services::auth::AuthService::default();
+    let service = solution::services::auth::AuthService::default();
     let user1 = User::new("tom".to_string(), "tom@example.com".to_string());
     let user2 = User::new("uma".to_string(), "uma@example.com".to_string());
 
@@ -231,7 +232,7 @@ fn test_auth_service_verify_wrong_user() {
 
 #[test]
 fn test_auth_service_logout() {
-    let service = modules_crates::services::auth::AuthService::default();
+    let service = solution::services::auth::AuthService::default();
     let user = User::new("victor".to_string(), "victor@example.com".to_string());
 
     let token = service.authenticate(&user);
@@ -263,7 +264,7 @@ fn test_auth_token_display() {
 #[test]
 fn test_user_accessible_via_root_reexport() {
     // This works because lib.rs does: pub use models::user::User;
-    let user = modules_crates::User::new(
+    let user = solution::User::new(
         "yara".to_string(),
         "yara@example.com".to_string(),
     );
@@ -274,13 +275,13 @@ fn test_user_accessible_via_root_reexport() {
 fn test_auth_token_accessible_via_root_reexport() {
     // This works because lib.rs does: pub use services::auth::AuthToken;
     let user = User::new("zack".to_string(), "zack@example.com".to_string());
-    let token = modules_crates::authenticate(&user);
-    let _: modules_crates::AuthToken = token;  // Type annotation verifies accessible
+    let token = solution::authenticate(&user);
+    let _: solution::AuthToken = token;  // Type annotation verifies accessible
 }
 
 #[test]
 fn test_prelude_imports_user() {
-    use modules_crates::prelude::*;
+    use solution::prelude::*;
 
     let user = User::new("alex".to_string(), "alex@example.com".to_string());
     assert_eq!(user.username(), "alex");
@@ -288,7 +289,7 @@ fn test_prelude_imports_user() {
 
 #[test]
 fn test_prelude_imports_auth() {
-    use modules_crates::prelude::*;
+    use solution::prelude::*;
 
     let user = User::new("ben".to_string(), "ben@example.com".to_string());
     let token = authenticate(&user);
@@ -301,13 +302,13 @@ fn test_prelude_imports_auth() {
 
 #[test]
 fn test_init_function() {
-    modules_crates::init("TestApp v1.0");
+    solution::init("TestApp v1.0");
     // Should not panic
 }
 
 #[test]
 fn test_version_function() {
-    let v = modules_crates::version();
+    let v = solution::version();
     assert!(!v.is_empty());
     // Version should be "0.1.0" as defined in Cargo.toml
     assert_eq!(v, "0.1.0");
@@ -321,21 +322,21 @@ fn test_version_function() {
 fn test_models_module_is_public() {
     // We can access the models module
     let _: &str = "this proves models module is accessible";
-    modules_crates::models::User::new("a".to_string(), "a@b".to_string());
+    solution::models::User::new("a".to_string(), "a@b".to_string());
 }
 
 #[test]
 fn test_services_module_is_public() {
     // We can access the services module
     let _: &str = "this proves services module is accessible";
-    modules_crates::services::AuthService::default();
+    solution::services::AuthService::default();
 }
 
 #[test]
 fn test_private_utils_module_not_accessible() {
     // This test verifies that utils module is NOT accessible
     // The following would not compile:
-    // modules_crates::utils::generate_random_string(16);
+    // solution::utils::generate_random_string(16);
 
     // Instead, we verify it's used internally by services
     let user = User::new("cat".to_string(), "cat@example.com".to_string());
@@ -360,7 +361,7 @@ fn test_complete_auth_workflow() {
     ).expect("valid user");
 
     // Step 2: Authenticate
-    let service = modules_crates::services::auth::AuthService::new(
+    let service = solution::services::auth::AuthService::new(
         "MyService".to_string(),
     );
     let token = service.authenticate(&user);
@@ -379,7 +380,7 @@ fn test_complete_auth_workflow() {
 
 #[test]
 fn test_multiple_users_same_service() {
-    let service = modules_crates::services::auth::AuthService::default();
+    let service = solution::services::auth::AuthService::default();
 
     let user1 = User::new("eve".to_string(), "eve@example.com".to_string());
     let user2 = User::new("frank".to_string(), "frank@example.com".to_string());

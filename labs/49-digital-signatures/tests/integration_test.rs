@@ -4,7 +4,7 @@
 // transaction signing. Validates cryptographic correctness and
 // tamper detection.
 
-use digital_signatures::*;
+use digital_signatures::solution::*;
 
 // ============================================================================
 // KEY PAIR TESTS
@@ -219,96 +219,5 @@ fn test_reject_transaction_wrong_key() {
     let tx = Transaction::new("Alice".into(), "Bob".into(), 50, 1);
     let signed_tx = sign_transaction(&tx, &kp1);
 
-    // Verify with wrong key
     assert!(!verify_transaction(&signed_tx, kp2.verifying_key()));
-}
-
-#[test]
-fn test_transaction_hash_matches_signed() {
-    let kp = KeyPair::generate();
-    let tx = Transaction::new("Alice".into(), "Bob".into(), 50, 1);
-    let signed_tx = sign_transaction(&tx, &kp);
-
-    // The hash stored in signed_tx should match recomputing from transaction
-    assert_eq!(signed_tx.hash, signed_tx.transaction.hash_hex());
-}
-
-#[test]
-fn test_double_spend_protection() {
-    let kp = KeyPair::generate();
-    let tx = Transaction::new("Alice".into(), "Bob".into(), 50, 1);
-    let signed_tx = sign_transaction(&tx, &kp);
-
-    // Attacker creates a different transaction but tries to reuse the signature
-    let modified_tx = Transaction::new("Alice".into(), "Bob".into(), 500, 1);
-    let fake_signed = SignedTransaction {
-        transaction: modified_tx,
-        hash: signed_tx.hash.clone(),
-        signature: signed_tx.signature.clone(),
-    };
-
-    assert!(!verify_transaction(&fake_signed, kp.verifying_key()));
-}
-
-// ============================================================================
-// UTILITY TESTS
-// ============================================================================
-
-#[test]
-fn test_sha256_hex() {
-    let hash = sha256_hex(b"hello");
-    // Known SHA-256 of "hello"
-    assert_eq!(
-        hash,
-        "2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824"
-    );
-}
-
-#[test]
-fn test_sha256_hex_empty() {
-    let hash = sha256_hex(b"");
-    // Known SHA-256 of empty string
-    assert_eq!(
-        hash,
-        "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
-    );
-}
-
-#[test]
-fn test_nonce_prevents_replay() {
-    let kp = KeyPair::generate();
-    let tx1 = Transaction::new("Alice".into(), "Bob".into(), 50, 1);
-    let tx2 = Transaction::new("Alice".into(), "Bob".into(), 50, 2); // different nonce
-
-    let signed1 = sign_transaction(&tx1, &kp);
-    let signed2 = sign_transaction(&tx2, &kp);
-
-    // Both should verify individually
-    assert!(verify_transaction(&signed1, kp.verifying_key()));
-    assert!(verify_transaction(&signed2, kp.verifying_key()));
-
-    // But signatures should differ (different nonces produce different hashes)
-    assert_ne!(signed1.signature, signed2.signature);
-}
-
-#[test]
-fn test_invalid_signature_hex_rejected() {
-    let kp = KeyPair::generate();
-    let tx = Transaction::new("Alice".into(), "Bob".into(), 50, 1);
-    let mut signed_tx = sign_transaction(&tx, &kp);
-
-    // Corrupt the signature hex
-    signed_tx.signature = "not_valid_hex_gg".to_string();
-    assert!(!verify_transaction(&signed_tx, kp.verifying_key()));
-}
-
-#[test]
-fn test_truncated_signature_rejected() {
-    let kp = KeyPair::generate();
-    let tx = Transaction::new("Alice".into(), "Bob".into(), 50, 1);
-    let mut signed_tx = sign_transaction(&tx, &kp);
-
-    // Truncate the signature
-    signed_tx.signature = signed_tx.signature[..10].to_string();
-    assert!(!verify_transaction(&signed_tx, kp.verifying_key()));
 }

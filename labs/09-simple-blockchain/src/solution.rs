@@ -1,5 +1,4 @@
-//! # Simple Blockchain - Complete Solution
-//!
+//! # Lab 09: Simple Blockchain
 //! ## What is a Blockchain?
 //!
 //! A blockchain is a linked list of blocks where:

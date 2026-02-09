@@ -34,11 +34,6 @@
 /// In C: This would compile and return a dangling pointer (use-after-free bug!)
 /// In Rust: Compiler rejects it at compile time. Memory safe!
 pub fn longest<'a>(s1: &'a str, s2: &'a str) -> &'a str {
-    // **Borrow checker reasoning:**
-    // - We're not CREATING any new data
-    // - We're just returning one of the input references
-    // - Both inputs live for 'a, so output lives for 'a
-    // - Safe to return!
     if s1.len() > s2.len() {
         s1
     } else {
@@ -71,9 +66,6 @@ impl<'a> TextMetadata<'a> {
     /// - count is COPIED (it's usize, a tiny type)
     /// - TextMetadata now holds the borrow
     pub fn new(text: &'a str, count: usize) -> TextMetadata<'a> {
-        // **Borrow checker ensures:**
-        // - Self can't outlive text
-        // - If text gets dropped, Self becomes invalid
         TextMetadata { text, count }
     }
 
@@ -101,11 +93,6 @@ impl<'a> TextMetadata<'a> {
 /// - We return an owned String we created
 /// - Ownership transfers to caller
 pub fn combine(s1: &str, s2: &str) -> String {
-    // **Ownership:**
-    // - s1 and s2 are borrowed (we only read them)
-    // - format! creates a new String on the heap
-    // - We return ownership of the new String
-    // - Caller becomes responsible for the String
     format!("{}{}", s1, s2)
 }
 
@@ -116,9 +103,6 @@ pub fn combine(s1: &str, s2: &str) -> String {
 /// - If list is dropped, returned reference becomes invalid
 /// - Rust prevents using the reference after list is dropped
 pub fn first_element<'a>(list: &'a [&str]) -> Option<&'a str> {
-    // **Option<&'a str> means:**
-    // - Either Some(reference) where reference lives for 'a
-    // - Or None
     list.first().copied()
 }
 
@@ -129,11 +113,6 @@ pub fn first_element<'a>(list: &'a [&str]) -> Option<&'a str> {
 /// - 'b: lifetime of second reference
 /// - Can be different! Function works even if lifetimes differ
 pub fn validate_refs<'a, 'b>(first: &'a str, second: &'b str) -> bool {
-    // **Why multiple lifetimes?**
-    // - first lives for 'a
-    // - second lives for 'b
-    // - We only compare them (don't store references)
-    // - So lifetimes don't need to match
     first.len() == second.len()
 }
 
@@ -143,51 +122,7 @@ pub fn validate_refs<'a, 'b>(first: &'a str, second: &'b str) -> bool {
 /// Sometimes Rust can infer lifetimes. This returns an owned String,
 /// so no lifetime parameters needed on return type.
 pub fn describe_text(meta: &TextMetadata) -> String {
-    // **Borrow chain:**
-    // - meta is borrowed as &TextMetadata
-    // - meta.text is borrowed as &str
-    // - All safe because we're only reading
     format!("Text: '{}', Count: {}", meta.text, meta.count)
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_longest_first() {
-        assert_eq!(longest("hello", "hi"), "hello");
-    }
-
-    #[test]
-    fn test_longest_second() {
-        assert_eq!(longest("hi", "hello"), "hello");
-    }
-
-    #[test]
-    fn test_text_metadata() {
-        let text = "Rust";
-        let meta = TextMetadata::new(text, 4);
-        assert_eq!(meta.text(), "Rust");
-        assert_eq!(meta.count(), 4);
-    }
-
-    #[test]
-    fn test_combine() {
-        let result = combine("Hello", " World");
-        assert_eq!(result, "Hello World");
-    }
-
-    #[test]
-    fn test_first_element() {
-        let items = vec!["first", "second"];
-        let refs: Vec<&str> = items.iter().map(|s| s.as_str()).collect();
-        assert_eq!(first_element(&refs), Some("first"));
-    }
-
-    #[test]
-    fn test_validate_refs() {
-        assert!(validate_refs("hello", "world"));
-        assert!(!validate_refs("hi", "hello"));
-    }
-}
+pub mod solution;

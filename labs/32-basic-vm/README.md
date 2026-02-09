@@ -1,256 +1,151 @@
-# Project 29: Basic VM
+# Project 32 - A Basic Stack-Based Virtual Machine
 
-## Overview
-This project implements a stack-based virtual machine that executes custom bytecode. You'll learn how programming languages are executed, how interpreters work, and the fundamentals of CPU architecture. This is the foundation of the JVM, Python interpreter, and WebAssembly.
+## What You're Building (Plain English)
 
-## Concepts Taught
-- **Stack-based architecture** vs register-based
-- **Bytecode interpretation** and instruction dispatch
-- **Instruction set design** (opcodes)
-- **Stack operations** (push, pop, arithmetic)
-- **Control flow** (jumps, branches)
-- **Memory model** (stack + heap simulation)
-- **Pattern matching** for instruction execution
-- **Error handling** for runtime errors
+You're building a simple, simulated computer! This "virtual machine" (VM) won't run on real hardware but will execute a custom "bytecode" language that you define. It will be a "stack machine," which means it performs all its calculations on a stack of values.
 
-## Why Stack-Based VMs?
+Think of it like an old RPN (Reverse Polish Notation) calculator. To add 2 and 3, you would:
+1.  `Push 2` onto the stack.
+2.  `Push 3` onto the stack.
+3.  Execute `Add`. The VM pops 2 and 3, adds them, and pushes the result `5` back onto the stack.
 
-### Stack-Based vs Register-Based
-There are two main VM architectures:
+You will define a set of instructions (an "instruction set"), write a program in that instruction set, and then build a VM that can execute it.
 
-**Stack-based** (JVM, Python, our VM):
-- Operations work on implicit stack
-- `PUSH 5`, `PUSH 3`, `ADD` → 5 + 3
-- Compact bytecode (fewer operands)
-- Simpler to generate from compiler
-- More instructions executed (push/pop overhead)
+## New Rust Concepts in This Project
 
-**Register-based** (Lua, Android's Dalvik):
-- Operations work on explicit registers
-- `ADD r1, r2, r3` → r1 = r2 + r3
-- Larger bytecode (more operands)
-- Fewer instructions (less overhead)
-- More complex compiler
+-   **Enums for Opcodes**: You'll define your VM's instruction set using a Rust `enum`. Each variant will represent an operation (e.g., `Push`, `Add`, `Halt`).
 
-**Our choice**: Stack-based for simplicity and educational value.
+-   **Pattern Matching with `match`**: The heart of your VM's execution loop will be a `match` statement that dispatches on the current instruction and executes the corresponding logic.
 
-**Real-world VMs:**
-- **JVM**: Stack-based, runs Java/Kotlin/Scala
-- **CPython**: Stack-based, runs Python
-- **WebAssembly**: Stack-based, runs in browsers
-- **Lua**: Register-based (5 registers)
-- **BEAM**: Register-based, runs Erlang/Elixir
+-   **Vectors as Stacks**: You'll use a `Vec<i32>` as the VM's data stack, using `push` to add items and `pop` to remove them.
 
-## Instruction Set Architecture
+-   **Program Counter**: You'll manage an "instruction pointer" or "program counter" (a `usize` variable) that keeps track of which instruction to execute next.
 
-Our VM supports:
+-   **Error Handling**: You'll implement robust error handling for runtime errors like stack underflow (popping from an empty stack) or division by zero.
 
-### Stack Operations
-- `PUSH <value>`: Push value onto stack
-- `POP`: Discard top of stack
+## Rust Syntax You'll See
 
-### Arithmetic
-- `ADD`: Pop two values, push sum
-- `SUB`: Pop two values, push difference
-- `MUL`: Pop two values, push product
-- `DIV`: Pop two values, push quotient
-
-### Comparison
-- `EQ`: Pop two values, push 1 if equal, 0 otherwise
-- `LT`: Pop two values, push 1 if less than, 0 otherwise
-- `GT`: Pop two values, push 1 if greater than, 0 otherwise
-
-### Control Flow
-- `JMP <offset>`: Jump to instruction
-- `JMPIF <offset>`: Jump if top of stack is non-zero
-- `CALL <offset>`: Call function (push return address)
-- `RET`: Return from function
-
-### I/O
-- `PRINT`: Pop and print value
-- `HALT`: Stop execution
-
-## VM Architecture
-
-```
-VirtualMachine
-├── stack: Vec<i64>        # Operand stack
-├── ip: usize              # Instruction pointer
-├── call_stack: Vec<usize> # Return addresses
-└── code: Vec<Instruction> # Bytecode
-
-Execution Loop:
-1. Fetch instruction at IP
-2. Decode instruction (pattern match)
-3. Execute instruction
-4. Update IP
-5. Repeat until HALT
-```
-
-## Example Program
-
-Calculate factorial(5):
-
-```
-Assembly         Stack State
----------------  -------------
-PUSH 5           [5]
-PUSH 1           [5, 1]        # accumulator
-LOOP:
-  DUP            [5, 1, 1]
-  PUSH 2         [5, 1, 1, 2]
-  LT             [5, 1, 0]      # 1 < 2? no
-  JMPIF END      [5, 1]
-  SWAP           [1, 5]
-  DUP            [1, 5, 5]
-  ROT            [5, 5, 1]
-  MUL            [5, 5]
-  SWAP           [5, 5]
-  PUSH 1         [5, 5, 1]
-  SUB            [5, 4]
-  SWAP           [4, 5]
-  JMP LOOP
-END:
-  POP            [120]
-  PRINT          []
-  HALT
-```
-
-## Beginner Pitfalls & VM Notes
-
-### Pitfall 1: Stack Underflow
 ```rust
-// Stack: []
-let a = self.stack.pop().unwrap();  // ❌ Panic!
-
-// Fix: Check stack size
-if self.stack.is_empty() {
-    return Err(VmError::StackUnderflow);
+// The set of all possible instructions for our VM
+pub enum Instruction {
+    Push(i32),
+    Add,
+    Sub,
+    Mul,
+    Div,
+    Halt, // Stop execution
 }
-```
 
-### Pitfall 2: Instruction Pointer Out of Bounds
-```rust
-// Jump beyond code length
-self.ip = 1000;  // ❌ Will panic on next fetch
-
-// Fix: Bounds checking
-if offset >= self.code.len() {
-    return Err(VmError::InvalidJump);
+// The Virtual Machine itself
+pub struct VM {
+    program: Vec<Instruction>,
+    stack: Vec<i32>,
+    ip: usize, // Instruction Pointer
 }
+
+// The main execution loop
+// loop {
+//     let instruction = &self.program[self.ip];
+//     self.ip += 1;
+//
+//     match instruction {
+//         Instruction::Push(value) => self.stack.push(*value),
+//         Instruction::Add => {
+//             let b = self.stack.pop().unwrap();
+//             let a = self.stack.pop().unwrap();
+//             self.stack.push(a + b);
+//         },
+//         Instruction::Halt => break,
+//         // ... other instructions
+//     }
+// }
 ```
 
-### Pitfall 3: Integer Division by Zero
-```rust
-let b = self.stack.pop().unwrap();
-let a = self.stack.pop().unwrap();
-let result = a / b;  // ❌ Panic if b == 0
-
-// Fix: Check for zero
-if b == 0 {
-    return Err(VmError::DivisionByZero);
-}
-```
-
-### Pitfall 4: Infinite Loops
-```rust
-// JMP to self creates infinite loop
-Instruction::Jmp(self.ip)  // ❌ Hangs forever
-
-// Fix: Add instruction count limit or timeout
-```
-
-## Code Walkthrough
-
-See `src/main.rs` for a detailed implementation that demonstrates:
-1. Defining an instruction set with enums
-2. Implementing a stack-based VM
-3. Fetch-decode-execute loop
-4. Example programs (arithmetic, loops, functions)
-5. Error handling for runtime errors
-6. Debugging output to trace execution
-
-## Performance Considerations
-
-### Bytecode Interpretation Speed
-- **Rust pattern matching**: ~5-10 CPU cycles per instruction
-- **JVM (HotSpot)**: Uses JIT compilation after warm-up
-- **CPython**: ~50-100 ns per bytecode
-- **WebAssembly**: Near-native speed with JIT
-
-**Our VM**: Interpreted, ~20-50ns per instruction on modern CPU
-
-### Optimization Techniques
-1. **Threaded code**: Replace switch/match with function pointers
-2. **JIT compilation**: Compile hot bytecode to native code
-3. **Inline caching**: Cache type information
-4. **Superinstructions**: Combine common sequences (PUSH + ADD)
-5. **Stack caching**: Keep top of stack in registers
-
-### Memory Usage
-- **Stack**: 8 bytes per value (i64)
-- **Instructions**: ~16 bytes per instruction (enum + data)
-- **Small programs**: <1 KB
-- **Large programs**: Megabytes (similar to real VMs)
-
-## Comparison: Rust vs Other VMs
-
-| Feature | Our VM | JVM | CPython | WebAssembly |
-|---------|--------|-----|---------|-------------|
-| Architecture | Stack | Stack | Stack | Stack |
-| Bytecode format | Enum | Binary | Binary | Binary |
-| Type system | Untyped | Typed | Dynamic | Typed |
-| JIT compilation | No | Yes (HotSpot) | No | Yes (V8, SpiderMonkey) |
-| Garbage collection | No | Yes | Yes (ref counting) | No (linear memory) |
-| Performance | ~50ns/instr | ~1-5ns/instr (JIT) | ~50-100ns/instr | ~1ns/instr (JIT) |
-
-**Rust advantage**: Zero-cost VM implementation, no GC overhead.
-
-## Additional Challenges
-
-1. **Add More Types**: Support strings, floats, booleans
-
-2. **Function Calls**: Implement local variables and parameter passing
-
-3. **Garbage Collection**: Add heap allocation with GC
-
-4. **Debugging**: Add breakpoints, step execution, stack inspection
-
-5. **JIT Compiler**: Compile hot code to native using cranelift
-
-6. **Assembler**: Write a parser to convert text assembly to bytecode
-
-## Real-World VM Features
-
-Production VMs add:
-- **Type system**: Static or dynamic typing
-- **Garbage collection**: Mark-and-sweep, generational, reference counting
-- **JIT compilation**: Compile to native code at runtime
-- **Exception handling**: try/catch mechanisms
-- **Module system**: Import/export, linking
-- **FFI**: Call native code (C, Rust)
-- **Concurrency**: Threads, async/await, actors
-- **Debugging**: Source maps, profiling, breakpoints
-
-## Future Directions
-
-- **Next**: Message bus (Project 30)
-- **Related**: Interpreter (Project 33), macros (Project 43)
-- **Advanced**: Build JIT compiler with cranelift, add GC with gc-arena
-
-## Running This Project
+## How to Run
 
 ```bash
-cd 29-basic-vm
-cargo run
+# Run the main binary (executes a sample program on your VM)
+cargo run -p basic-vm
+
+# Run the tests (checks your VM's correctness)
+cargo test -p basic-vm
+
+# Check if code compiles without running
+cargo check -p basic-vm
 ```
 
-## Expected Output
+## The Exercises
 
-You should see:
-- VM initialization with bytecode
-- Step-by-step execution trace (instruction + stack state)
-- Results of arithmetic operations
-- Factorial calculation result
-- Function call demonstration
-- Final stack state
+You will implement the `VM` and its instruction set.
+
+1.  **`Instruction` Enum**: Define the opcodes for your VM. Start with:
+    -   `Push(i32)`: Pushes a constant value onto the stack.
+    -   `Add`, `Sub`, `Mul`, `Div`: Pops two values, performs the operation, and pushes the result.
+    -   `Halt`: Stops the VM.
+
+2.  **`VM` Struct**: Create the struct to hold the VM's state:
+    -   `program`: A `Vec<Instruction>` containing the bytecode to execute.
+    -   `stack`: A `Vec<i32>` for the operand stack.
+    -   `ip`: A `usize` for the instruction pointer.
+
+3.  **`new()`**: A constructor that takes a program and creates a new VM instance, ready to run.
+
+4.  **`run()`**: The main execution loop.
+    -   It should loop, fetching and executing instructions one by one, advancing the `ip`.
+    -   Use a `match` statement to handle each `Instruction` variant.
+    -   Implement error handling: if an operation would cause a stack underflow or division by zero, the `run` method should stop and return an `Err`.
+    -   The loop terminates when it encounters a `Halt` instruction or an error.
+
+5.  **Stack Manipulation Instructions (Stretch Goal)**: Add more classic stack opcodes:
+    -   `Pop`: Discards the top value.
+    -   `Dup`: Duplicates the top value (`[a]` -> `[a, a]`).
+    -   `Swap`: Swaps the top two values (`[a, b]` -> `[b, a]`).
+
+6.  **Control Flow (Stretch Goal)**: Implement instructions for jumping:
+    -   `Jmp(addr)`: Unconditionally sets the `ip` to `addr`.
+    -   `JmpIf(addr)`: Pops a value; if it's non-zero, sets `ip` to `addr`.
+
+## Solution Explanation (No Code - Just Ideas)
+
+**The Execution Cycle (Fetch-Decode-Execute)**:
+1.  **Fetch**: Get the instruction at the current `ip`. Increment `ip`.
+2.  **Decode**: The `match` statement is our decode step. It figures out what the instruction means.
+3.  **Execute**: The code inside each `match` arm is the execution step. It manipulates the stack or the `ip`.
+
+**Example: `(5 + 3) * 2`**
+This would be written in our bytecode as:
+`Push(5)`
+`Push(3)`
+`Add`
+`Push(2)`
+`Mul`
+`Halt`
+
+Let's trace the stack:
+-   `Push(5)` -> `[5]`
+-   `Push(3)` -> `[5, 3]`
+-   `Add` -> pops 3, pops 5, pushes 8 -> `[8]`
+-   `Push(2)` -> `[8, 2]`
+-   `Mul` -> pops 2, pops 8, pushes 16 -> `[16]`
+-   `Halt` -> Stop. The final result is the value left on the stack.
+
+## Where Rust Shines
+
+-   **`enum` and `match`**: Rust's powerful enums and pattern matching are a perfect fit for defining instruction sets and building interpreters/VMs.
+-   **`Result` for Error Handling**: The `run` loop can return a `Result`, cleanly propagating runtime errors without exceptions or error codes.
+-   **Safety**: Even though we're building a "low-level" VM, Rust's safety guarantees (like bounds checking on the `program` vector) prevent many common bugs found in C/C++ VM implementations.
+-   **`Vec` as a Stack**: The `Vec` type provides an efficient, safe, and easy-to-use implementation of a stack.
+
+## Common Beginner Mistakes
+
+1.  **Stack Underflow**: Calling `pop()` on an empty stack will panic.
+    -   **Fix**: Before popping, always check if the stack has enough operands. For `Add`, you need at least 2. If not, return a `StackUnderflow` error.
+
+2.  **Off-by-One `ip` Errors**: Forgetting to increment the instruction pointer, or incrementing it at the wrong time, can lead to infinite loops or skipped instructions.
+    -   **Fix**: A common pattern is to fetch the instruction and immediately increment the `ip` *before* executing the instruction.
+
+3.  **Ownership in the `program` Vector**: The `VM` should own its program. A common way to do this is to have the `new()` constructor take ownership of the `Vec<Instruction>`.
+
+4.  **Mutable State**: The `stack` and `ip` are mutable state. The `run` method will need to take `&mut self`.
+
+This project is a fantastic introduction to how programming languages are actually executed under the hood. Good luck! 🦀

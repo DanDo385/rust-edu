@@ -10,7 +10,7 @@
 // - Message types and structure
 // - Edge cases (single node, all faulty, boundary values)
 
-use consensus_simulation::{
+use consensus_simulation::solution::{
     byzantine_tolerance, is_byzantine_safe, ConsensusCoordinator, Message, Node, NodeType,
 };
 

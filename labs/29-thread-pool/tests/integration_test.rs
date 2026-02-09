@@ -8,7 +8,7 @@
 // - Concurrent job execution
 // - Edge cases: pool size of 1, many jobs on few workers
 
-use thread_pool::ThreadPool;
+use thread_pool::solution::ThreadPool;
 
 use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::{Arc, Barrier};

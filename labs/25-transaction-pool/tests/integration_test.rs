@@ -11,7 +11,7 @@
 // - Pool statistics
 // - Pool clearing
 
-use transaction_pool::{PoolStats, PriorityTransaction, Transaction, TransactionPool};
+use transaction_pool::solution::{PoolStats, PriorityTransaction, Transaction, TransactionPool};
 
 // ============================================================================
 // HELPER FUNCTIONS

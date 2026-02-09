@@ -1,4 +1,9 @@
 //! # Error Handling - Complete Solution
+//!
+//! Classroom narrative:
+//! 1. Inputs are borrowed (`&str`) to avoid cloning raw text.
+//! 2. Each `Result`/`Option` return transfers ownership of errors or values explicitly; no hidden exceptions.
+//! 3. Callers either handle `Ok`/`Err` or propagate with `?`, highlighting how Rust forces you to confront failure.
 
 use std::fmt;
 use std::error::Error;

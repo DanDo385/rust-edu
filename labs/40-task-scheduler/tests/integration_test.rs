@@ -4,7 +4,7 @@
 // on wall-clock time. All tests are deterministic and fast.
 
 use std::time::Duration;
-use task_scheduler::*;
+use task_scheduler::solution::{Scheduler, TaskInfo};
 
 // ============================================================================
 // TASK INFO CONSTRUCTION

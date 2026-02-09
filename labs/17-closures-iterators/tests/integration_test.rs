@@ -1,6 +1,6 @@
 //! Integration tests for Lab 17: Closures & Iterators
 
-use closures_iterators::*;
+use closures_iterators::solution::*;
 
 #[test]
 fn test_apply_closure_basic() {

@@ -1,123 +1,104 @@
-# Project 36: Order Book (Trading Engine)
+# Project 39 - A Financial Order Book
 
-## Overview
-Build a limit order book matching engine similar to those used in cryptocurrency and stock exchanges. Learn how trading systems match buyers with sellers using price-time priority, and explore Rust's BTreeMap for maintaining sorted price levels.
+## What You're Building (Plain English)
 
-## Concepts Taught
-- **BTreeMap** for sorted key-value storage
-- **Price-time priority** algorithm
-- **Order matching logic**
-- **Enum for order types** (Buy/Sell)
-- **Collections and iterators**
-- **Decimal precision** handling (avoid floating-point errors)
-- **Data structures** for financial systems
-- **FIFO queues** within price levels
+You're building the core component of a financial exchange, like a stock or cryptocurrency exchange. This component is called an "order book." It's a record of all the "buy" and "sell" orders that traders have placed for a particular asset (e.g., "RUST" coin).
 
-## Why Order Books?
+-   **Buy Orders (Bids)**: "I want to buy 10 shares at $99."
+-   **Sell Orders (Asks)**: "I want to sell 5 shares at $101."
 
-Order books are the core of every modern exchange:
-- **Stock markets**: NYSE, NASDAQ use order books
-- **Crypto exchanges**: Coinbase, Binance, Kraken
-- **Forex markets**: Currency trading platforms
+Your order book will maintain two lists: one for all the buy orders and one for all the sell orders, sorted by price. The main job of the order book is to "match" a new incoming order with existing orders to create a "trade." For example, if a new "buy" order comes in at a price of $101, it will immediately match with the sell order at $101, and a trade occurs.
 
-### How It Works
+## New Rust Concepts in This Project
 
-1. **Limit Orders**: Traders specify price and quantity
-2. **Price Levels**: Orders grouped by price, sorted best-to-worst
-3. **Matching**: When buy price >= sell price, trade executes
-4. **Priority**: At same price, older orders fill first (FIFO)
+-   **`BTreeMap`**: A map where the keys are sorted. This is perfect for an order book, as we need to keep bids sorted from highest to lowest price and asks from lowest to highest. It gives us O(log n) access to the best prices.
+-   **Complex Data Modeling**: You'll design several structs (`Order`, `Trade`, `OrderBook`) to accurately model the real-world concepts of a financial market.
+-   **Stateful Logic**: The order book is a stateful system. Each new order can mutate the state by either being added to the book or by creating a trade and removing another order.
+-   **Price-Time Priority**: You'll implement the fundamental rule of matching engines: orders are prioritized first by the best price, and then by the time they were submitted (first-in, first-out).
 
-Example:
+## Rust Syntax You'll See
+
+```rust
+use std::collections::BTreeMap;
+
+// Bids are sorted high-to-low, but BTreeMap sorts low-to-high.
+// A common trick is to store bid prices as their negative, or use
+// a custom wrapper struct that reverses the ordering.
+// For asks, the natural sort order is correct.
+struct OrderBook {
+    bids: BTreeMap<u64, Vec<Order>>, // Price -> Orders at that price
+    asks: BTreeMap<u64, Vec<Order>>,
+}
+
+struct Order {
+    id: u64,
+    quantity: u64,
+    // ... other fields
+}
+
+// Adding a buy order
+// let price_level = book.bids.entry(order.price).or_default();
+// price_level.push(order);
+
+// Getting the best ask (lowest price)
+// let best_ask = book.asks.iter_mut().next();
 ```
-Sell Orders (Ask Side):
-$102.00 | 50 shares
-$101.50 | 100 shares
-$101.00 | 25 shares
--------------------- Spread
-$100.50 | 30 shares  <-- Best Bid
-$100.00 | 75 shares
-$99.50  | 200 shares
-Buy Orders (Bid Side)
-```
 
-## Why BTreeMap?
-
-A BTreeMap keeps keys sorted, which is perfect for order books:
-- **O(log n)** insertions, lookups, and deletions
-- **Automatic sorting** by price
-- **Efficient iteration** in price order
-- **Better cache locality** than HashMap for ordered data
-
-## Trading Engine Context
-
-Real exchanges process millions of orders per second. This simplified version demonstrates:
-- How prices are matched
-- Why sorted data structures matter
-- How to maintain order priority
-- The basics of market microstructure
-
-## Running This Project
+## How to Run
 
 ```bash
-cd 36-order-book
-cargo run
+# Run the main binary (a demo of the order book in action)
+cargo run -p order-book
+
+# Run the tests
+cargo test -p order-book
+
+# Check if code compiles
+cargo check -p order-book
 ```
 
-## Performance Considerations
+## The Exercises
 
-**Order Book Complexity**:
-- Insert order: O(log n) for price level + O(1) to append to queue
-- Match orders: O(m) where m = number of matched orders
-- View best bid/ask: O(log n) to get first/last key
+You will implement the `OrderBook` and its matching logic.
 
-**Real-world Optimizations**:
-- Use price discretization (integer prices, not floats)
-- Pre-allocate VecDeques for common price levels
-- Use lock-free data structures for concurrency
-- Memory-mapped I/O for persistence
+1.  **`Order` and `Trade` Structs**: Define the data structures for a single order (with an ID, side, price, and quantity) and a trade record.
+2.  **`OrderBook` Struct**: The main struct. It will contain two `BTreeMap`s: one for bids and one for asks. The maps will go from a price level to a `Vec<Order>` (a queue of all orders at that price).
+3.  **`add_order()`**: The main entry point. This function takes a new order.
+    -   It first determines if the order is a `Buy` or a `Sell`.
+    -   It then checks if this new order can be "matched" against the other side of the book.
+        -   A new buy order is matched against the asks, starting from the *lowest* price ask.
+        -   A new sell order is matched against the bids, starting from the *highest* price bid.
+    -   The `add_order` function should loop, creating trades and consuming quantity from orders on both sides until the incoming order is either fully filled or no more matches can be made.
+    -   If any quantity from the new order remains, it is added to the book.
 
-**Memory Usage**:
-- BTreeMap overhead: ~3-4 pointers per node
-- VecDeque per price level: minimal when empty
-- Total: O(n) where n = number of active orders
+## Solution Explanation (No Code - Just Ideas)
 
-## Comparison: Rust vs C++ for Trading
+**Matching a New Buy Order**:
+1.  Receive a new buy order: "Buy 10 units at $102."
+2.  Look at the best ask (the sell order with the lowest price). Let's say it's "Sell 5 units at $101."
+3.  Since the buy price ($102) is greater than or equal to the sell price ($101), a trade can happen!
+4.  A trade is created for 5 units at $101 (the price of the order that was already on the book).
+5.  The sell order is now fully filled and is removed.
+6.  The incoming buy order still has `10 - 5 = 5` units left to fill.
+7.  The matching engine looks at the *next* best ask. Let's say it's "Sell 8 units at $103."
+8.  The buy price ($102) is *less than* the sell price ($103). No more matches can be made.
+9.  The remaining 5 units of the buy order are added to the bid side of the book at its price of $102.
 
-| Feature | Rust | C++ |
-|---------|------|-----|
-| Memory safety | Guaranteed at compile-time | Manual, error-prone |
-| Performance | Equivalent to C++ | Industry standard |
-| BTreeMap | std::collections::BTreeMap | std::map (Red-Black tree) |
-| Concurrency | Ownership prevents data races | Requires careful locking |
-| Learning curve | Steeper initially | Familiar to many devs |
+**Data Structures**:
+-   **Bids (`BTreeMap<u64, ...>`)**: We want to match against the *highest* price bid first. A `BTreeMap` sorts keys in ascending order. So, to easily get the highest bid, we can use `.iter().rev().next()`.
+-   **Asks (`BTreeMap<u64, ...>`)**: We want to match against the *lowest* price ask first. The natural iteration order of a `BTreeMap` (`.iter().next()`) gives us this.
 
-Most high-frequency trading systems are C++ for legacy reasons, but Rust is gaining adoption due to safety guarantees.
+## Where Rust Shines
 
-## Additional Challenges
+-   **Data Structures**: `BTreeMap` provides the sorted-map functionality that is essential for an efficient order book.
+-   **Enums**: Clearly modeling `Buy` vs `Sell` sides is a perfect use case for an enum.
+-   **Ownership and Mutability**: Rust's rules make it clear how the `OrderBook`'s state is being mutated. The `&mut self` on `add_order` tells you that this method will change the book.
+-   **Performance**: Rust's speed is critical for financial applications where matching engine performance is paramount.
 
-1. **Market Orders**: Implement orders that execute at any price immediately
+## Common Beginner Mistakes
 
-2. **Order Cancellation**: Add ability to cancel orders by ID
+1.  **Price-Time Priority**: Forgetting that if two orders are at the same price, the one that arrived first should be filled first. This is why we use a `Vec` (acting as a FIFO queue) for each price level.
+2.  **Partial Fills**: Not correctly handling the case where an incoming order is only partially filled. The remaining quantity needs to be handled correctly.
+3.  **Floating Point for Money**: Using `f64` for prices is generally a bad idea due to precision issues. It's better to use fixed-point decimal types or, for simplicity in this lab, integers representing cents or basis points. We'll use `u64`.
 
-3. **Time-in-Force**: Support IOC (Immediate or Cancel), FOK (Fill or Kill), GTC (Good til Cancel)
-
-4. **Order Book Depth**: Display the full order book with price levels and quantities
-
-5. **Trading Statistics**: Track volume, number of trades, VWAP (Volume Weighted Average Price)
-
-6. **Persistence**: Save/load order book state to disk
-
-## Future Directions
-
-- **Next**: Task scheduler for time-based execution (Project 37)
-- **Later**: Build a high-frequency trading bot (Project 50)
-- **Advanced**: Add concurrent order processing with lock-free structures (Project 27)
-
-## Expected Output
-
-You should see:
-- Orders being added to the book
-- Automatic matching when prices cross
-- Best bid and ask prices
-- Trade executions with price and quantity
-- Remaining unfilled orders in the book
+This project is a fantastic simulation of a core financial technology system and a great exercise in complex, stateful data structure management.

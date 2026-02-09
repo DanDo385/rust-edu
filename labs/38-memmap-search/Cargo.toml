@@ -3,7 +3,11 @@ name = "memmap-search"
 version = "0.1.0"
 edition.workspace = true
 rust-version.workspace = true
-authors.workspace = true
-license.workspace = true
 
 [dependencies]
+memmap2 = "0.5"
+rand = "0.8"
+rayon = "1.10"
+tempfile = "3"
+
+[dev-dependencies]

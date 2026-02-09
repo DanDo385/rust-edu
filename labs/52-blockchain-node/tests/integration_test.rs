@@ -3,7 +3,7 @@
 // Tests for Block, Transaction, UTXO set, Mempool, Blockchain,
 // merkle root computation, mining, and validation.
 
-use blockchain_node::*;
+use blockchain_node::solution::*;
 
 // ============================================================================
 // BLOCK TESTS

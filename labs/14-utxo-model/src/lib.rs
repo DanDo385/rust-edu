@@ -44,7 +44,9 @@ pub struct Utxo {
 impl Utxo {
     /// Creates a new UTXO with the given owner and amount.
     pub fn new(owner: Address, amount: u64) -> Self {
-        Utxo { owner, amount }
+        // TODO: Construct and return `Utxo { owner, amount }`.
+        let _ = (owner, amount);
+        todo!("Create a Utxo value")
     }
 }
 
@@ -63,7 +65,9 @@ pub struct TxInput {
 
 impl TxInput {
     pub fn new(utxo_id: UtxoId, spender: Address) -> Self {
-        TxInput { utxo_id, spender }
+        // TODO: Construct and return `TxInput { utxo_id, spender }`.
+        let _ = (utxo_id, spender);
+        todo!("Create a TxInput value")
     }
 }
 
@@ -78,7 +82,9 @@ pub struct TxOutput {
 
 impl TxOutput {
     pub fn new(recipient: Address, amount: u64) -> Self {
-        TxOutput { recipient, amount }
+        // TODO: Construct and return `TxOutput { recipient, amount }`.
+        let _ = (recipient, amount);
+        todo!("Create a TxOutput value")
     }
 }
 
@@ -100,7 +106,9 @@ pub struct Transaction {
 
 impl Transaction {
     pub fn new(id: String, inputs: Vec<TxInput>, outputs: Vec<TxOutput>) -> Self {
-        Transaction { id, inputs, outputs }
+        // TODO: Construct and return `Transaction { id, inputs, outputs }`.
+        let _ = (id, inputs, outputs);
+        todo!("Create a Transaction value")
     }
 }
 
@@ -132,54 +140,9 @@ pub type UtxoSet = HashMap<UtxoId, Utxo>;
 /// ## Returns
 /// `Ok(fee)` with the transaction fee if valid, `Err(reason)` if invalid.
 pub fn apply_transaction(utxo_set: &mut UtxoSet, tx: &Transaction) -> Result<u64, String> {
-    // STEP 1: Validate all inputs exist and calculate total input amount
-    let mut total_input: u64 = 0;
-
-    for input in &tx.inputs {
-        let utxo = utxo_set
-            .get(&input.utxo_id)
-            .ok_or(format!(
-                "UTXO {} not found (already spent or invalid)",
-                input.utxo_id
-            ))?;
-
-        // OWNERSHIP CHECK: Does the spender actually own this UTXO?
-        if utxo.owner != input.spender {
-            return Err(format!(
-                "Ownership violation: {} tried to spend UTXO owned by {}",
-                input.spender, utxo.owner
-            ));
-        }
-
-        total_input += utxo.amount;
-    }
-
-    // STEP 2: Calculate total output amount
-    let total_output: u64 = tx.outputs.iter().map(|o| o.amount).sum();
-
-    // STEP 3: Conservation of value check
-    if total_input < total_output {
-        return Err(format!(
-            "Invalid transaction: outputs ({}) exceed inputs ({})",
-            total_output, total_input
-        ));
-    }
-
-    let fee = total_input - total_output;
-
-    // STEP 4: Remove spent UTXOs (prevents double-spending!)
-    for input in &tx.inputs {
-        utxo_set.remove(&input.utxo_id);
-    }
-
-    // STEP 5: Add new UTXOs to the set
-    for (index, output) in tx.outputs.iter().enumerate() {
-        let utxo_id = format!("{}:{}", tx.id, index);
-        let utxo = Utxo::new(output.recipient.clone(), output.amount);
-        utxo_set.insert(utxo_id, utxo);
-    }
-
-    Ok(fee)
+    // TODO: Validate ownership + value conservation, remove spent inputs, add new outputs.
+    let _ = (utxo_set, tx);
+    todo!("Apply transaction to UTXO set")
 }
 
 /// Calculate the balance of an address by summing all UTXOs they own.
@@ -187,25 +150,25 @@ pub fn apply_transaction(utxo_set: &mut UtxoSet, tx: &Transaction) -> Result<u64
 /// In the UTXO model, there's no single "account balance" variable.
 /// Your balance is the SUM of all UTXOs you control.
 pub fn get_balance(utxo_set: &UtxoSet, address: &str) -> u64 {
-    utxo_set
-        .values()
-        .filter(|utxo| utxo.owner == address)
-        .map(|utxo| utxo.amount)
-        .sum()
+    // TODO: Sum amounts of all UTXOs owned by `address`.
+    let _ = (utxo_set, address);
+    todo!("Compute address balance from UTXO set")
 }
 
 /// Get all UTXOs owned by an address.
 /// Useful for wallet software to show which "coins" you have.
 pub fn get_utxos_for_address(utxo_set: &UtxoSet, address: &str) -> Vec<(UtxoId, Utxo)> {
-    utxo_set
-        .iter()
-        .filter(|(_, utxo)| utxo.owner == address)
-        .map(|(id, utxo)| (id.clone(), utxo.clone()))
-        .collect()
+    // TODO: Return cloned `(id, utxo)` entries owned by `address`.
+    let _ = (utxo_set, address);
+    todo!("Collect UTXOs for one address")
 }
 
 /// Create a genesis UTXO (like a mining reward) and add it to the set.
 /// Only genesis/coinbase transactions can create value without inputs.
 pub fn create_genesis_utxo(utxo_set: &mut UtxoSet, id: &str, owner: &str, amount: u64) {
-    utxo_set.insert(id.to_string(), Utxo::new(owner.to_string(), amount));
+    // TODO: Insert one genesis UTXO with provided id/owner/amount.
+    let _ = (utxo_set, id, owner, amount);
+    todo!("Insert a genesis UTXO")
 }
+
+pub mod solution;

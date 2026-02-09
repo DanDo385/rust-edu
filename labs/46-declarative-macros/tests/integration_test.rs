@@ -4,6 +4,7 @@
 // Macros must be #[macro_export] to be used in integration tests.
 
 use declarative_macros::*;
+use declarative_macros::solution::{calculate_add, calculate_multiply, calculate_power};
 
 // ============================================================================
 // GREET MACRO TESTS

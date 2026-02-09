@@ -1,203 +1,85 @@
-# Project 35: Memory-Mapped File Processing
+# Project 38 - High-Performance Search with Memory-Mapped Files
 
-## Overview
-Implement high-performance file processing using memory-mapped I/O (mmap). This project demonstrates zero-copy file access, parallel scanning, and performance optimization techniques for processing large files efficiently.
+## What You're Building (Plain English)
 
-## Concepts Taught
-- **Memory-mapped files**: using `memmap2` crate
-- **Zero-copy I/O**: accessing file data without copying to userspace
-- **Virtual memory**: how OS maps files into process address space
-- **Page faults**: lazy loading of file contents
-- **Parallel file scanning**: splitting mmap across threads
-- **Performance optimization**: comparing mmap vs traditional I/O
-- **Unsafe Rust**: handling unsafe memory operations safely
-- **SIMD potential**: vectorized operations on mapped memory
+You're building a very fast file searching tool. Instead of reading a file piece by piece into memory (which can be slow), you're going to use a technique called "memory mapping." This tells the operating system (OS) to map a file on disk directly into your program's address space.
 
-## Why Memory Mapping Works
+To your program, it will look like the entire file is just one giant slice (`&[u8]`) in memory. You can search through it incredibly quickly without issuing explicit read calls. The OS handles loading the necessary parts of the file into physical RAM as you access them. This is a common technique used in high-performance tools like `grep` and in databases.
 
-### Traditional File I/O
-1. Application calls `read()`
-2. OS copies data from disk → kernel buffer
-3. OS copies data from kernel buffer → application buffer
-4. **Two copies!** Slow for large files
+## New Rust Concepts in This Project
 
-### Memory-Mapped I/O
-1. Application calls `mmap()`
-2. OS maps file into process virtual address space
-3. Access file data like memory (no explicit read/write)
-4. **Zero copies!** OS handles paging automatically
+-   **Memory-Mapped Files**: The core concept. You'll learn what a memory map is and why it's so fast for read-heavy workloads.
+-   **The `memmap2` Crate**: A safe and convenient wrapper around the low-level, platform-specific OS APIs for memory mapping.
+-   **Working with Byte Slices (`&[u8]`)**: A memory-mapped file is exposed as a slice of bytes. You'll practice searching for patterns within these slices.
+-   **`unsafe` Code**: Creating a memory map can be an `unsafe` operation because the underlying file could be changed by another process while you're reading it, leading to memory safety issues. The `memmap2` crate provides safe abstractions, but understanding the underlying `unsafe` nature is important.
+-   **Performance Comparison**: You'll compare the performance of searching a file via a memory map versus traditional buffered reading.
 
-### When Pages Are Loaded
-Memory mapping is **lazy**:
-- `mmap()` returns immediately (doesn't load file)
-- First access to page causes page fault
-- OS loads page from disk into RAM
-- Subsequent accesses are fast (already in RAM)
+## Rust Syntax You'll See
 
-### Why It's Fast
-- **No copying**: file data accessed directly
-- **OS manages caching**: uses all available RAM efficiently
-- **Shared mappings**: multiple processes can share same pages
-- **Parallel access**: different threads can access different regions
-- **Sequential prefetch**: OS predicts and preloads pages
-
-## Why Rust Behaves This Way
-
-### Safety Concerns with mmap
-Memory-mapped files are **inherently unsafe**:
-- File can be modified externally (race conditions)
-- File can be truncated (access beyond EOF)
-- Multiple processes might write concurrently
-- Undefined behavior if file changes during access
-
-**Rust's approach**: Use `unsafe` but encapsulate safely:
 ```rust
-let mmap = unsafe { MmapOptions::new().map(&file)? };  // Unsafe creation
-// But using it as &[u8] is safe if we control the file
+use memmap2::Mmap;
+use std::fs::File;
+
+// Open a file
+let file = File::open("my_large_file.txt")?;
+
+// Memory-map the file into the address space.
+// This is `unsafe` because the file can be modified by another process
+// at any time, which could violate memory safety.
+let mmap = unsafe { Mmap::map(&file)? };
+
+// Now you can treat `mmap` like a giant byte slice!
+// `&mmap[..]` gives you a `&[u8]`
+let byte_slice = &mmap[..];
+
+// Search for a pattern
+let found = byte_slice.windows(pattern.len()).any(|window| window == pattern);
 ```
 
-**Comparison with other languages:**
-- **C**: `mmap()` - completely manual, easy to corrupt memory
-- **Python**: `mmap` module - safe but slower (Python overhead)
-- **Go**: `syscall.Mmap()` - manual, some safety via slices
-- **Rust**: `memmap2` - unsafe creation, but typed access
-
-### Zero-Cost Abstraction
-The `memmap2` crate wraps `mmap()` syscall with zero overhead:
-- Same performance as C
-- Type safety where possible
-- Clear unsafe boundaries
-
-## Beginner Pitfalls & Borrow Checker Notes
-
-### Pitfall 1: File Modification During Access
-```rust
-let mmap = unsafe { MmapOptions::new().map(&file)? };
-// If file is modified externally: UNDEFINED BEHAVIOR!
-```
-**Fix**: Ensure exclusive access or use read-only mapping.
-
-### Pitfall 2: Accessing Beyond EOF
-```rust
-let mmap = unsafe { MmapOptions::new().map(&file)? };
-file.set_len(0)?;  // Truncate file
-let _ = mmap[0];   // ❌ SEGFAULT or undefined behavior
-```
-**Fix**: Don't truncate file while mapped.
-
-### Pitfall 3: Not Checking File Size
-```rust
-let mmap = unsafe { MmapOptions::new().map(&file)? };
-let value = mmap[1_000_000_000];  // ❌ Out of bounds if file is smaller
-```
-**Fix**: Check `mmap.len()` before accessing.
-
-### Pitfall 4: Holding Mmap Too Long
-```rust
-let mmap = unsafe { MmapOptions::new().map(&file)? };
-// File descriptor stays open until mmap is dropped
-// Can hit open file limit!
-```
-**Fix**: Drop mmap when done, or use scoped access.
-
-## Code Walkthrough
-
-See `src/main.rs` for a detailed, commented implementation that demonstrates:
-1. Creating and reading memory-mapped files
-2. Searching large files with zero-copy access
-3. Parallel scanning across multiple threads
-4. Performance comparison: mmap vs read()
-5. Safe encapsulation of unsafe operations
-6. Creating test files for benchmarking
-7. Byte pattern matching in mapped memory
-
-## Performance Considerations
-
-**When mmap is FASTER:**
-- Large files (> 1MB)
-- Random access patterns
-- Multiple passes over data
-- Parallel processing
-- Memory available for caching
-
-**When mmap is SLOWER:**
-- Small files (< 4KB) - syscall overhead
-- Sequential one-time reads - buffered I/O is optimized
-- Limited RAM - thrashing due to paging
-- Network filesystems - latency amplified
-
-**Benchmark Results** (typical, 100MB file):
-- `read()` sequential: ~300 MB/s
-- `mmap` first pass: ~500 MB/s (includes page faults)
-- `mmap` second pass: ~2000 MB/s (data in page cache)
-- `mmap` parallel: ~5000 MB/s (4 cores, data cached)
-
-**Memory Usage:**
-- `read()`: File size in RAM (your buffer)
-- `mmap`: OS manages, uses available RAM, can exceed file size
-- Virtual memory: File appears in process, but not fully in RAM
-
-## Comparison: Rust vs Go vs Python
-
-| Feature | Rust (memmap2) | Go (syscall.Mmap) | Python (mmap) |
-|---------|----------------|-------------------|---------------|
-| Safety | Unsafe creation, safe use | Manual, some safety | Safe but slow |
-| Performance | Fastest (zero overhead) | Fast | Slower (interpreter) |
-| Ease of use | Moderate (unsafe block) | Moderate | Easy |
-| Parallel access | Excellent (Send/Sync) | Good (goroutines) | Poor (GIL) |
-| Cross-platform | Yes (Windows/Unix) | Partial | Yes |
-
-## Additional Challenges
-
-1. **Line Counter**: Count lines in a large text file using mmap.
-
-2. **Pattern Search**: Implement Boyer-Moore or similar algorithm on mmap.
-
-3. **Log File Analyzer**: Parse and analyze large log files in parallel.
-
-4. **File Deduplication**: Find duplicate files using mmap for fast comparison.
-
-5. **Binary Parser**: Parse binary file formats (images, videos) with zero-copy.
-
-6. **Database Page Cache**: Implement simple database buffer pool with mmap.
-
-7. **Compression**: Implement LZ4 or similar on memory-mapped data.
-
-8. **Compare with io_uring**: Benchmark against modern async I/O.
-
-## Real-World Usage
-
-Memory-mapped files are used in:
-- **Databases**: SQLite, LMDB, RocksDB use mmap for data files
-- **Search engines**: Lucene, Elasticsearch for index files
-- **Log processing**: ripgrep, ag for fast text search
-- **Image processing**: Loading large images without full copy
-- **Game engines**: Loading assets (textures, models)
-- **Scientific computing**: Processing large datasets
-- **Compilers**: Reading source files (LLVM uses mmap)
-- **Operating systems**: Executable loading (demand paging)
-
-## Running This Project
+## How to Run
 
 ```bash
-cd 35-memmap-search
-cargo run --release  # Always use --release for accurate benchmarks
+# Run the main binary (creates a test file and compares search methods)
+cargo run -p memmap-search --release
+
+# Run the tests
+cargo test -p memmap-search
+
+# Check if code compiles
+cargo check -p memmap-search
 ```
 
-**Note**: Add to `Cargo.toml`:
-```toml
-[dependencies]
-memmap2 = "0.9"
-```
+## The Exercises
 
-## Expected Output
+You will implement functions to search for a byte pattern in a file using different methods.
 
-You should see:
-1. Test file generation (creating large file for testing)
-2. Sequential mmap search with timing
-3. Parallel mmap search with timing (faster)
-4. Performance comparison: mmap vs read()
-5. Memory usage statistics
-6. Pattern matching results
-7. Speedup from parallelization
-8. Cache effects (second run faster than first)
+1.  **`create_test_file()` (Helper)**: A function to generate a large file with known content, which you'll use for searching and benchmarking.
+
+2.  **`search_with_read()`**: The "slow" way. This function will read the file in chunks using a `BufReader` and search for the pattern. This serves as your baseline.
+
+3.  **`search_with_mmap()`**: The "fast" way. This function will use `memmap2::Mmap` to map the file into memory and then perform a highly efficient search directly on the resulting byte slice.
+
+4.  **`parallel_search_with_mmap()` (Stretch Goal)**: Combine memory mapping with the `rayon` crate from the previous lab. Since the memory-mapped slice can be safely shared between threads, you can use `.par_windows()` to search for the pattern in parallel, which can be even faster on very large files and multi-core systems.
+
+## Solution Explanation (No Code - Just Ideas)
+
+**Why is Memory-Mapping Fast?**
+1.  **No Data Copying**: When you use `read()`, data is copied from the file on disk, into a kernel buffer in the OS, and then copied *again* from the kernel buffer into your program's buffer. A memory map avoids these copies. The OS "pretends" the file is in memory, and your program accesses it directly.
+2.  **Lazy Loading**: The entire file isn't loaded into RAM at once. The OS loads pages (small chunks, often 4KB) of the file on demand as your program's code touches that part of the memory map.
+3.  **OS-Level Caching**: The OS is very good at caching files. If you access the same part of the memory map again, it's likely the data is already in a fast OS cache.
+
+The trade-off is that it's less suitable for files that change frequently or for writing, and it has a higher startup cost than a simple read. But for searching large, static files, it's often the fastest method.
+
+## Where Rust Shines
+
+-   **Safety Wrappers**: The `memmap2` crate provides a safe API around the underlying `unsafe` OS calls, which is a common pattern in the Rust ecosystem. It handles details like ensuring the file handle outlives the memory map.
+-   **Zero-Cost Abstractions**: Accessing the memory map as a slice (`&[u8]`) has no overhead. You're working with a pointer and a length, just as you would in C, but with all of Rust's safety guarantees (like bounds checking) on top.
+-   **Integration with `rayon`**: Because the memory-mapped slice is `Sync`, it can be safely used with Rayon's parallel iterators for massive performance gains.
+
+## Common Beginner Mistakes
+
+1.  **File Handle Lifetime**: The memory map is only valid as long as the underlying `File` handle is open. If the `File` is dropped, the map becomes invalid. The `memmap2` crate's API is designed to prevent this with lifetimes.
+2.  **Forgetting `unsafe`**: Directly calling `Mmap::map()` is `unsafe`. You are making a promise to the compiler that you will handle the risks of the underlying file changing.
+3.  **Treating Text as Bytes**: A memory map is a `&[u8]` (a slice of bytes). If the file is UTF-8 text, you can't just assume every byte is a valid character boundary. Searching for byte patterns is safe, but interpreting the data as a `&str` requires validation (`std::str::from_utf8`).
+
+This lab gives you a glimpse into the world of systems programming and performance optimization, showing how Rust can provide high-level abstractions without sacrificing low-level speed.

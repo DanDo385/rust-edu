@@ -2,7 +2,7 @@
 //!
 //! Tests verify Rectangle methods, Point operations, and Counter chaining.
 
-use structs_methods_alternative::*;
+use structs_methods_alternative::solution::*;
 
 // ============================================================================
 // RECTANGLE TESTS

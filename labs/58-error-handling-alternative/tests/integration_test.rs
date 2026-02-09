@@ -3,7 +3,7 @@
 //! Tests verify Option/Result usage, custom error types, error propagation
 //! with ?, parse error handling, and combinator patterns.
 
-use error_handling_alternative::*;
+use error_handling_alternative::solution::*;
 
 // ============================================================================
 // OPTION TESTS (divide, safe_get, first_even)

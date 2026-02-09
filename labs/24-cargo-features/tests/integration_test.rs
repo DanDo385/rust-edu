@@ -4,7 +4,7 @@
 // requiring any optional dependencies (colored, serde, etc.).
 // All tests exercise compile-time cfg detection and the User data model.
 
-use cargo_features::*;
+use cargo_features::solution::*;
 
 // ============================================================================
 // PLATFORM DETECTION TESTS

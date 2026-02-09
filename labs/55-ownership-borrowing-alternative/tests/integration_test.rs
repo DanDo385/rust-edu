@@ -3,7 +3,7 @@
 //! Tests verify borrowing behavior, string operations, move vs copy semantics,
 //! and mutable borrowing patterns.
 
-use ownership_borrowing_alternative::*;
+use ownership_borrowing_alternative::solution::*;
 
 // ============================================================================
 // IMMUTABLE BORROWING TESTS

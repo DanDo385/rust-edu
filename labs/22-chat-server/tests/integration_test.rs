@@ -3,7 +3,7 @@
 //! Tests core chat server components without requiring actual TCP connections.
 //! These verify the message protocol, client management, and broadcast logic.
 
-use chat_server::{Client, Message, MessageQueue, ClientRegistry, is_command, parse_command};
+use chat_server::solution::{Client, Message, MessageQueue, ClientRegistry, is_command, parse_command};
 
 // ============================================================================
 // CLIENT TESTS

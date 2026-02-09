@@ -1,183 +1,122 @@
-// Lab 32: Basic VM (Virtual Machine) - Demo
-//
-// A stack-based virtual machine that executes custom bytecode.
-// Demonstrates how interpreters work, instruction dispatch, and VM architecture.
-// This is the foundation of JVM, Python, WebAssembly, and other interpreted languages.
+//! # A Basic Stack-Based Virtual Machine - Interactive Demo
+//! 
+//! This binary demonstrates the `VM` from our library by executing
+//! a few sample programs.
+//! Run with: cargo run -p basic-vm
 
-use basic_vm::{Instruction, VirtualMachine};
+use basic_vm::solution::{Instruction, VM, VmError};
 
 fn main() {
-    println!("=== Stack-Based Virtual Machine ===\n");
+    println!("=== Basic Stack-Based Virtual Machine Demo ===\n");
 
     // ============================================================================
-    // SIMPLE ARITHMETIC
+    // DEMO 1: Simple Arithmetic: (10 + 20) * 2
     // ============================================================================
-    demo_arithmetic();
-
-    // ============================================================================
-    // FACTORIAL CALCULATION
-    // ============================================================================
-    demo_factorial();
-
-    // ============================================================================
-    // FUNCTION CALLS
-    // ============================================================================
-    demo_function_calls();
-
-    // ============================================================================
-    // CONDITIONAL EXECUTION
-    // ============================================================================
-    demo_conditionals();
-}
-
-fn demo_arithmetic() {
-    println!("=== Arithmetic Operations ===\n");
-
-    // Program: (5 + 3) * 2
-    let program = vec![
-        Instruction::Push(5),
-        Instruction::Push(3),
+    println!("1. Program 1: (10 + 20) * 2");
+    println!("   --------------------------");
+    let program1 = vec![
+        Instruction::Push(10),
+        Instruction::Push(20),
         Instruction::Add,
         Instruction::Push(2),
         Instruction::Mul,
-        Instruction::Print,
         Instruction::Halt,
     ];
 
-    println!("Program: (5 + 3) * 2");
-    let mut vm = VirtualMachine::new(program);
-    vm.run().unwrap();
-    println!("Output: {:?}", vm.output());
-    println!();
-}
+    println!("   Program: Push(10), Push(20), Add, Push(2), Mul, Halt");
+    run_and_print(&program1);
 
-fn demo_factorial() {
-    println!("=== Factorial Calculation ===\n");
-
-    // Program: factorial(5) using a loop
-    // Uses loop invariant: stack = [n, acc] (acc on top)
-    let program = vec![
-        Instruction::Push(5),        // 0: n = 5
-        Instruction::Push(1),        // 1: acc = 1
-        // LOOP (ip = 2): stack = [..., n, acc]
-        Instruction::Over,           // 2: [..., n, acc, n]
-        Instruction::Push(1),        // 3: [..., n, acc, n, 1]
-        Instruction::Eq,             // 4: [..., n, acc, n==1]
-        Instruction::JmpIf(13),      // 5: if n==1, jump to END
-        // BODY: stack = [..., n, acc]
-        Instruction::Over,           // 6: [..., n, acc, n]
-        Instruction::Mul,            // 7: [..., n, acc*n]
-        Instruction::Swap,           // 8: [..., acc*n, n]
-        Instruction::Push(1),        // 9: [..., acc*n, n, 1]
-        Instruction::Sub,            // 10: [..., acc*n, n-1]
-        Instruction::Swap,           // 11: [..., n-1, acc*n]
-        Instruction::Jmp(2),         // 12: back to LOOP
-        // END (ip = 13): stack = [..., n, acc] where n==1
-        Instruction::Swap,           // 13: [..., acc, n]
-        Instruction::Pop,            // 14: [..., acc]
-        Instruction::Print,          // 15: print acc = 120
-        Instruction::Halt,           // 16
-    ];
-
-    println!("Program: factorial(5)");
-    let mut vm = VirtualMachine::new(program);
-    vm.run().unwrap();
-    println!("Output: {:?}", vm.output());
-    println!();
-}
-
-fn demo_function_calls() {
-    println!("=== Function Calls ===\n");
-
-    // Program: call a function that adds two numbers
-    let program = vec![
-        // MAIN (ip = 0-4):
+    // ============================================================================
+    // DEMO 2: Conditional Logic: if (10 > 5) then 99 else -1
+    // ============================================================================
+    println!("2. Program 2: if (10 > 5) then 99 else -1");
+    println!("   ---------------------------------------");
+    let program2 = vec![
         Instruction::Push(10),
-        Instruction::Push(20),
-        Instruction::Call(5),      // call add_function at ip=5
-        Instruction::Print,
-        Instruction::Halt,
-        // ADD_FUNCTION (ip = 5-6):
-        Instruction::Add,
-        Instruction::Ret,
-    ];
-
-    println!("Program: function call to add two numbers");
-    let mut vm = VirtualMachine::new(program);
-    vm.run().unwrap();
-    println!("Output: {:?}", vm.output());
-    println!();
-}
-
-fn demo_conditionals() {
-    println!("=== Conditional Execution ===\n");
-
-    // Program: if 5 > 3 then print 100 else print 200
-    let program = vec![
         Instruction::Push(5),
-        Instruction::Push(3),
-        Instruction::Gt,           // 5 > 3? pushes 1 (true)
-        Instruction::JmpIf(7),     // if true, jump to THEN branch
-        // ELSE (ip = 4-6):
-        Instruction::Push(200),
-        Instruction::Print,
-        Instruction::Jmp(9),       // jump past THEN
-        // THEN (ip = 7-8):
-        Instruction::Push(100),
-        Instruction::Print,
-        // END (ip = 9):
+        Instruction::Gt,      // Stack: [1 (true)]
+        Instruction::JmpIf(5),// Jump to Push(99) if true
+        Instruction::Push(-1),// This is the "else" block
+        Instruction::Jmp(6),  // Jump past the "then" block
+        Instruction::Push(99),// This is the "then" block
         Instruction::Halt,
     ];
 
-    println!("Program: if 5 > 3 then print 100 else print 200");
-    let mut vm = VirtualMachine::new(program);
-    vm.run().unwrap();
-    println!("Output: {:?}", vm.output());
-    println!();
+    println!("   Program uses conditional jumps (Gt, JmpIf, Jmp)");
+    run_and_print(&program2);
+    
+    // ============================================================================
+    // DEMO 3: Loop: Sum numbers from 5 down to 1
+    // ============================================================================
+    println!("3. Program 3: Sum numbers from 5 down to 1");
+    println!("   ---------------------------------------");
+    // Pseudo-code:
+    // sum = 0
+    // n = 5
+    // loop {
+    //   if n == 0 break
+    //   sum = sum + n
+    //   n = n - 1
+    // }
+    let program3 = vec![
+        Instruction::Push(0),    // Initialize sum = 0; Stack: [sum]
+        Instruction::Push(5),    // Initialize n = 5;   Stack: [sum, n]
+        // Loop start (address 2)
+        Instruction::Dup,        // Duplicate n;          Stack: [sum, n, n]
+        Instruction::Push(0),    // Push 0 for comparison; Stack: [sum, n, n, 0]
+        Instruction::Eq,         // n == 0?;              Stack: [sum, n, (1 or 0)]
+        Instruction::JmpIf(12),  // If true, jump to Halt
+        // Loop body
+        Instruction::Over,       // Copy sum to top;      Stack: [sum, n, sum]
+        Instruction::Add,        // Add n to sum;         Stack: [sum, new_sum]
+        Instruction::Swap,       // Swap;                 Stack: [new_sum, sum]
+        Instruction::Pop,        // Pop old sum;          Stack: [new_sum]
+        Instruction::Push(1),    // Push 1 for decrement
+        Instruction::Sub,        // n = n - 1;            Stack: [sum, n-1]
+        Instruction::Jmp(2),     // Jump to loop start
+        // Halt (address 12)
+        Instruction::Halt,
+    ];
+    
+    println!("   Program uses a loop with Dup, Over, Swap, Pop, and Jmp");
+    run_and_print(&program3);
+
+
+    // ============================================================================
+    // DEMO 4: Stack Underflow Error
+    // ============================================================================
+    println!("4. Program 4: Stack Underflow Error");
+    println!("   -------------------------------");
+    let program4 = vec![
+        Instruction::Push(10),
+        Instruction::Add, // Tries to pop 2 values, but only 1 is on the stack
+        Instruction::Halt,
+    ];
+
+    println!("   Program: Push(10), Add");
+    run_and_print(&program4);
+
+    println!("=== Demo Complete! ===");
 }
 
-// ============================================================================
-// WHAT RUST DOES UNDER THE HOOD
-// ============================================================================
-//
-// 1. INSTRUCTION DISPATCH
-//    The match on Instruction compiles to a jump table
-//    CPU can predict branches well (modern branch predictors)
-//    ~5-10 CPU cycles per instruction
-//
-// 2. STACK OPERATIONS
-//    Vec<i64> grows dynamically on the heap
-//    push/pop are O(1) amortized (reallocation when capacity exceeded)
-//    Stack values are i64 (8 bytes each)
-//
-// 3. ENUM SIZE
-//    Instruction enum is sized by largest variant
-//    Tag (discriminant) + largest data = ~16 bytes per instruction
-//    This is larger than real VMs (which use compact binary encoding)
-//
-// 4. ERROR HANDLING
-//    Result<T, VmError> is zero-cost abstraction
-//    ? operator compiles to efficient machine code
-//    No exceptions - all errors explicit in types
-//
-// 5. PROGRAM COUNTER (IP)
-//    Just a usize (8 bytes on 64-bit)
-//    Incremented after each instruction
-//    Jumps modify it directly (no pipeline flush in interpreter!)
-//
-// 6. FUNCTION CALLS
-//    call_stack is separate from operand stack
-//    Stores return addresses (instruction pointers)
-//    Similar to CPU's hardware call stack
-
-// ============================================================================
-// KEY TAKEAWAYS
-// ============================================================================
-// 1. Stack-based VMs are simple to implement
-// 2. Fetch-decode-execute loop is the core
-// 3. Pattern matching on enums is perfect for instruction dispatch
-// 4. Stack operations are the primary way to manipulate data
-// 5. Control flow uses jumps (like assembly)
-// 6. Function calls need a separate call stack
-// 7. Error handling prevents crashes (underflow, division by zero)
-// 8. Real VMs add: types, GC, JIT, exceptions, modules
+/// Helper function to run a VM and print its result.
+fn run_and_print(program: &[Instruction]) {
+    let mut vm = VM::new(program.to_vec());
+    match vm.run() {
+        Ok(Some(result)) => {
+            println!("   ✅ Success! Final result: {}", result);
+        }
+        Ok(None) => {
+            println!("   ✅ Success! Program halted with an empty stack.");
+        }
+        Err(e) => {
+            let error_msg = match e {
+                VmError::StackUnderflow => "Stack Underflow",
+                VmError::DivisionByZero => "Division by Zero",
+                VmError::InvalidInstructionPointer => "Invalid Instruction Pointer",
+            };
+            println!("   ❌ Error: {}", error_msg);
+        }
+    }
+    println!();
+}

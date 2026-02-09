@@ -3,7 +3,7 @@
 //! These tests verify basic arithmetic, type conversions, boolean operations,
 //! tuple operations, and shadowing/parsing behavior.
 
-use variables_types_alternative::*;
+use variables_types_alternative::solution::*;
 
 // ============================================================================
 // ARITHMETIC TESTS

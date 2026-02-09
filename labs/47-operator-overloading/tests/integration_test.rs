@@ -3,7 +3,7 @@
 // Tests Rational and Complex number types with all operator implementations,
 // mathematical properties, edge cases, and generic functions.
 
-use operator_overloading::*;
+use operator_overloading::solution::*;
 
 // ============================================================================
 // RATIONAL NUMBER CREATION TESTS

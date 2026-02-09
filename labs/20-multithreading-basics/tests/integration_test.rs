@@ -1,6 +1,6 @@
 //! Integration tests for Lab 20: Multithreading Basics
 
-use multithreading_basics::{
+use multithreading_basics::solution::{
     spawn_workers, process_data_in_thread, SharedCounter,
     thread_worker, sum_parallel, parallel_map, counting_threads,
 };

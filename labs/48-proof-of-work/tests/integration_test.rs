@@ -3,7 +3,7 @@
 // Tests SHA-256 hashing, block creation, mining, validation,
 // difficulty checking, and blockchain integrity.
 
-use proof_of_work::*;
+use proof_of_work::solution::*;
 
 // ============================================================================
 // SHA-256 HASH UTILITY TESTS

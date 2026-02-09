@@ -1,6 +1,6 @@
 //! Integration tests for Lab 15: Lifetimes & Borrow Checker
 
-use lifetimes_borrow_checker::*;
+use lifetimes_borrow_checker::solution::*;
 
 #[test]
 fn test_longest_basic() {

@@ -3,7 +3,7 @@
 // Tests CSV parsing, JSON output, field mapping, nested structures,
 // error handling, and edge cases.
 
-use csv_to_json::*;
+use csv_to_json::solution::*;
 
 // ============================================================================
 // CSV TEST DATA

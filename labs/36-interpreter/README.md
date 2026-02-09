@@ -1,225 +1,223 @@
-# Project 33: Expression Interpreter
+# Project 36 - A Tree-Walking Interpreter
 
-## Overview
-Build a simple interpreter for arithmetic expressions, demonstrating parsing, Abstract Syntax Tree (AST) construction, and recursive evaluation. This project teaches the fundamentals of language implementation, from tokenization to execution.
+## What You Will Build
 
-## Concepts Taught
-- **Lexical analysis**: converting text to tokens
-- **Parsing**: converting tokens to AST
-- **Abstract Syntax Tree (AST)**: representing program structure
-- **Recursive evaluation**: traversing and computing AST
-- **Enums for AST nodes**: sum types for different expression kinds
-- **Pattern matching**: handling different AST node types
-- **Operator precedence**: implementing correct evaluation order
-- **Error handling**: reporting syntax and runtime errors
+You will build a miniature language engine for arithmetic expressions such as:
 
-## Why Interpreters Work
+- `2 + 3 * 4`
+- `(1 + 2) * 3`
+- `10 * (1 / (2 - 2))`
 
-### The Interpretation Pipeline
-1. **Source Code** → "2 + 3 * 4"
-2. **Tokenization** → [Number(2), Plus, Number(3), Star, Number(4)]
-3. **Parsing** → AST: Add(2, Multiply(3, 4))
-4. **Evaluation** → 14
+The interpreter pipeline has three stages:
 
-Each stage transforms input into a representation that's easier to work with.
+1. Lexer: raw text -> token stream
+2. Parser: token stream -> abstract syntax tree (AST)
+3. Evaluator: AST -> numeric result (`f64`)
 
-### Abstract Syntax Trees (AST)
-An AST represents the syntactic structure of code:
-- **Nodes**: operations, literals, variables
-- **Tree structure**: reflects operator precedence
-- **No syntax details**: parentheses, whitespace are gone
+This is the same architecture used in real compilers and interpreters, scaled down to a focused arithmetic grammar.
 
-**Example**: `2 + 3 * 4` becomes:
-```
-    +
-   / \
-  2   *
-     / \
-    3   4
-```
+## Why This Lab Matters (First Principles)
 
-### Why Recursive Evaluation
-Trees are recursive data structures, so we use recursive functions to traverse them:
-- Base case: literal values
-- Recursive case: evaluate children, then apply operator
-- Natural fit for expression evaluation
+This lab teaches computer science fundamentals directly:
 
-## Why Rust Behaves This Way
+- Parsing is structured control flow over symbols.
+- Trees are recursive data structures that encode meaning, not just data.
+- Evaluation is recursive problem decomposition.
+- Error handling is part of the language design, not an afterthought.
 
-### Enums for AST Nodes
-Rust's enums are perfect for ASTs because they're **sum types**:
-```rust
-enum Expr {
-    Number(f64),
-    BinOp(Box<Expr>, Op, Box<Expr>),
-}
-```
-- Each variant can hold different data
-- Pattern matching ensures you handle all cases
-- Compiler prevents missing cases at compile-time
+You are not just “calculating math.” You are implementing a deterministic execution model.
 
-**Comparison with other languages:**
-- **Python**: Use classes with inheritance (more verbose, runtime errors)
-- **Go**: Use interfaces with type assertions (runtime errors possible)
-- **TypeScript**: Discriminated unions (similar to Rust, but less safe)
-- **Rust**: Enums + pattern matching (exhaustive, compile-time checked)
+## Memory Model and Ownership (Mandatory)
 
-### Box for Recursive Types
-You can't have infinitely-sized types:
-```rust
-enum Expr {
-    BinOp(Expr, Op, Expr),  // ❌ ERROR: infinite size
-}
-```
-**Fix**: Use `Box<Expr>` (heap allocation, pointer-sized):
-```rust
-enum Expr {
-    BinOp(Box<Expr>, Op, Box<Expr>),  // ✅ OK
-}
+### High-level ownership flow
+
+```text
+input &str (borrowed from caller)
+        |
+        v
+tokenize(input) -> Vec<Token> (owned)
+        |
+        v
+parse(tokens) -> Expr AST (owned)
+        |
+        v
+evaluate(&ast) -> f64 (Copy) or EvalError
 ```
 
-## Beginner Pitfalls & Borrow Checker Notes
+### Stack vs heap in this lab
 
-### Pitfall 1: Forgetting Box for Recursive Enums
-```rust
-enum Expr {
-    Add(Expr, Expr),  // ❌ ERROR: recursive type has infinite size
-}
-```
-**Fix**: Use `Box<T>` for indirection:
-```rust
-enum Expr {
-    Add(Box<Expr>, Box<Expr>),  // ✅ OK
-}
-```
+- Stack:
+  - references (`&str`, `&Expr`)
+  - scalar values (`f64`, enum tags, indices)
+  - smart pointers (`Box<Expr>` handles)
+- Heap:
+  - `Vec<Token>` token buffer
+  - recursive AST nodes behind `Box<Expr>`
+  - owned `String` values used by error messages
 
-### Pitfall 2: Non-Exhaustive Pattern Matching
-```rust
-match expr {
-    Expr::Number(n) => n,
-    Expr::Add(l, r) => eval(l) + eval(r),
-    // ❌ ERROR: missing Expr::Subtract
-}
-```
-**Fix**: Handle all variants or use wildcard:
-```rust
-match expr {
-    Expr::Number(n) => n,
-    Expr::Add(l, r) => eval(l) + eval(r),
-    _ => panic!("Unimplemented"),  // ✅ OK
-}
+### Concrete AST memory sketch
+
+Expression: `(2 + 3) * 4`
+
+```text
+Stack:
+  ast: Expr::Binary { op: Multiply, left: Box<Expr>, right: Box<Expr> }
+         |                             |
+         v                             v
+Heap:
+  left_box  -> Expr::Grouping(
+                 Box(
+                   Expr::Binary { op: Add, left: Box(Literal(2)), right: Box(Literal(3)) }
+                 )
+               )
+  right_box -> Expr::Literal(4)
 ```
 
-### Pitfall 3: String Parsing Complexity
-Manual string parsing is error-prone. Consider using parser combinator libraries like `nom` or `pest` for production code.
+### Borrow checker and evaluation
 
-### Pitfall 4: Stack Overflow with Deep Recursion
-Very deep expressions can overflow the stack:
-```rust
-eval(1 + 1 + 1 + ... 10000 times)  // ❌ Stack overflow
+`evaluate(expr: &Expr)` borrows the AST immutably.
+
+- Multiple read-only borrows are allowed.
+- No ownership is transferred during traversal.
+- This avoids copying the tree and prevents accidental mutation while evaluating.
+
+## Rust Mental Models in This Lab
+
+- Immutability by default:
+  - Bindings are immutable unless marked `mut`.
+  - This prevents accidental parser/evaluator state bugs.
+- Mutability is explicit:
+  - Lexer/parser cursors use `mut` where state movement is required.
+- Speed:
+  - `Vec<Token>` and `Box<Expr>` are predictable, low-overhead representations.
+  - Borrowed references in evaluator avoid extra allocation and cloning.
+- Safety:
+  - `Result<T, E>` forces explicit handling of malformed input and runtime failure.
+
+## Symbol Deep Dive
+
+### `&` and `&mut`
+
+- `&str` and `&Expr` are borrows, not ownership transfers.
+- `&mut` is used where state must advance (for example lexer character cursor or parser position).
+- Common misconception: “`&` means pass-by-reference.” In Rust, references are still values with strict aliasing rules.
+
+### `*`
+
+- In evaluator code, `*` can mean:
+  - dereference (for example reading from `&f64`)
+  - multiplication (for numeric expressions)
+- Context determines meaning.
+
+### `Box<T>`
+
+- `Box<Expr>` stores child AST nodes on the heap.
+- Required for recursive enums so the outer enum has a known size.
+
+### `Result<T, E>` and `?`
+
+- `Result` encodes success/failure in the type system.
+- `?` returns early on error and keeps code linear.
+
+## Grammar and Precedence
+
+The parser implements precedence using layered functions:
+
+```text
+expression -> term ((+|-) term)*
+term       -> factor ((*|/) factor)*
+factor     -> NUMBER | "(" expression ")" | "-" factor
 ```
-**Fix**: Use iterative evaluation or increase stack size.
 
-## Code Walkthrough
+Why this matters:
+- `2 + 3 * 4` parses as `2 + (3 * 4)`, not `(2 + 3) * 4`
+- Parentheses override default precedence.
 
-See `src/main.rs` for a detailed, commented implementation that demonstrates:
-1. Token definition and tokenizer (lexer)
-2. AST node definitions using enums
-3. Recursive descent parser
-4. Recursive evaluator
-5. Error handling for invalid syntax
-6. Support for +, -, *, /, parentheses
-7. Proper operator precedence
-
-## Performance Considerations
-
-**Tokenization:**
-- O(n) where n = input length
-- Each character examined once
-- String allocations for numbers
-
-**Parsing:**
-- O(n) for our simple recursive descent parser
-- Creates AST nodes (heap allocations)
-- Could use arena allocator for better performance
-
-**Evaluation:**
-- O(nodes) where nodes = AST size
-- Each node visited once
-- Recursive calls use stack space
-
-**Memory:**
-- AST nodes: ~32 bytes each (with Box pointers)
-- Stack depth: proportional to expression nesting
-- Could optimize with iterative evaluation
-
-**Real-World Optimizations:**
-- **JIT compilation**: compile AST to machine code (like LuaJIT, V8)
-- **Bytecode**: compile to bytecode, interpret bytecode (like Python)
-- **Tree-walking optimizations**: inline caching, quickening
-- **Parser generators**: use tools like LALRPOP, pest
-
-## Comparison: Rust vs Go vs Python
-
-| Feature | Rust | Go | Python |
-|---------|------|----|----|
-| AST representation | Enums with Box | Interfaces | Classes/dataclasses |
-| Pattern matching | Exhaustive, compile-time | Type switches, runtime | if/elif, runtime |
-| Memory safety | Compile-time | Runtime (nil pointers) | Runtime |
-| Performance | Fastest | Fast | Slower |
-| Parser tools | nom, pest, LALRPOP | go/parser, antlr | PLY, lark, pyparsing |
-
-## Additional Challenges
-
-1. **Variables**: Add variable assignment and lookup (symbol table).
-
-2. **Functions**: Support user-defined functions with parameters.
-
-3. **Control Flow**: Add if/else statements.
-
-4. **Type System**: Add type checking (int vs float vs bool).
-
-5. **REPL**: Create a read-eval-print loop for interactive use.
-
-6. **Bytecode Compiler**: Compile to bytecode instead of direct interpretation.
-
-7. **Better Errors**: Add line/column numbers and helpful error messages.
-
-8. **Full Language**: Implement a subset of Lua, JavaScript, or Python.
-
-## Real-World Usage
-
-Interpreters are everywhere:
-- **Python**: CPython is a bytecode interpreter
-- **Ruby**: YARV interpreter
-- **JavaScript**: V8, SpiderMonkey (with JIT)
-- **Lua**: LuaJIT (fastest interpreter)
-- **SQL**: Database query engines
-- **RegEx**: Regular expression engines
-- **Calculators**: Expression evaluators
-- **Configuration Languages**: JSON, TOML, YAML interpreters
-
-## Parser Tools for Rust
-
-- **nom**: Parser combinator library (fast, type-safe)
-- **pest**: PEG parser with external grammar files
-- **LALRPOP**: LR(1) parser generator
-- **combine**: Parser combinator library
-- **pom**: Simple parser combinator
-
-## Running This Project
+## How to Run
 
 ```bash
-cd 33-interpreter
-cargo run
+cargo run -p interpreter
+cargo test -p interpreter
+cargo check -p interpreter
 ```
 
-## Expected Output
+## Exercises
 
-You should see:
-1. Tokenization examples showing token streams
-2. AST construction for various expressions
-3. Evaluation results with correct operator precedence
-4. Error handling for malformed expressions
-5. Complex expressions with parentheses
-6. Step-by-step evaluation trace
+1. Lexer (`src/lexer.rs`)
+- Goal: turn source text into `Vec<Token>`.
+- Constraints:
+  - ignore whitespace
+  - parse integers and decimals
+  - fail on unexpected characters
+- Edge cases:
+  - malformed numbers
+  - empty input
+- Success looks like: tokens preserve exact operator/number order.
+
+2. Parser (`src/parser.rs`)
+- Goal: convert tokens to `Expr` AST with correct precedence and grouping.
+- Constraints:
+  - obey grammar rules
+  - detect unexpected end-of-input and bad parentheses
+- Edge cases:
+  - unary minus
+  - nested parentheses
+- Success looks like: AST shape reflects precedence correctly.
+
+3. Evaluator (`src/evaluator.rs`)
+- Goal: recursively compute AST value.
+- Constraints:
+  - no AST ownership transfer
+  - return `DivisionByZero` for invalid division
+- Edge cases:
+  - nested unary/binary expressions
+  - division by zero in subexpression
+- Success looks like: deterministic numeric result or correct error.
+
+4. Orchestration (`src/lib.rs`)
+- Goal: compose `tokenize -> parse -> evaluate`.
+- Constraints:
+  - map stage-specific errors into top-level `InterpreterError`
+- Success looks like: one clear API, `interpret(input: &str) -> Result<f64, InterpreterError>`.
+
+## What Tests Prove
+
+- Basic arithmetic tests prove semantic correctness of operators.
+- Precedence tests prove parser structure, not just math correctness.
+- Parentheses tests prove grammar grouping behavior.
+- Unary tests prove factor-level recursion and operator binding.
+- Error tests prove failure contracts for each stage:
+  - lexer rejects invalid characters
+  - parser rejects malformed syntax
+  - evaluator rejects runtime invalid operations
+
+If a precedence test fails, parser structure is likely wrong.
+If only division-by-zero tests fail, evaluator guard logic is likely wrong.
+If malformed input crashes instead of returning `Err`, error propagation is wrong.
+
+## Common Mistakes
+
+1. Forgetting to consume tokens in parser loops.
+2. Mixing precedence levels so `+` and `*` parse at the same depth.
+3. Taking ownership of AST nodes in evaluator instead of borrowing (`&Expr`).
+4. Treating all failures as one generic error (losing stage context).
+
+## Performance Notes
+
+- Tree-walking is simple and readable but not the fastest strategy.
+- This lab optimizes for correctness + clarity first.
+- Rust still provides strong baseline speed because:
+  - no GC pauses
+  - explicit memory layout
+  - minimal copying due to borrowing
+
+## Next Steps
+
+After this lab, you can extend the language safely:
+
+- identifiers and variables
+- assignment and environments
+- function calls
+- boolean expressions and conditionals
+
+Each extension reuses the same memory and ownership model you built here.

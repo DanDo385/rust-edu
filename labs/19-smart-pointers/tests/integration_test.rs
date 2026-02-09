@@ -1,6 +1,6 @@
 //! Integration tests for Lab 19: Smart Pointers
 
-use smart_pointers::{List, TreeNode, SharedCounter, GraphNode, Resource, shared_value_example, count_references};
+use smart_pointers::solution::{List, TreeNode, SharedCounter, GraphNode, Resource, shared_value_example, count_references};
 use std::rc::Rc;
 
 // ============================================================================

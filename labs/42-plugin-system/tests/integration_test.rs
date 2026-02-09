@@ -4,7 +4,10 @@
 // the PluginRegistry, and the DataFormatter trait. All output is captured
 // as return values (no stdout dependency).
 
-use plugin_system::*;
+use plugin_system::solution::{
+    AnalyticsPlugin, CachePlugin, CsvFormatter, DataFormatter, JsonFormatter, LoggerPlugin,
+    NotificationPlugin, Plugin, PluginRegistry, XmlFormatter,
+};
 
 // ============================================================================
 // LOGGER PLUGIN

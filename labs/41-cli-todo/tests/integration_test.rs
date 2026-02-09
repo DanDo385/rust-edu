@@ -3,7 +3,7 @@
 // These tests verify the TodoList and Task types work correctly
 // in-memory without any file I/O. All tests are deterministic and fast.
 
-use cli_todo::*;
+use cli_todo::solution::{Task, TodoList};
 
 // ============================================================================
 // TASK CONSTRUCTION AND PROPERTIES

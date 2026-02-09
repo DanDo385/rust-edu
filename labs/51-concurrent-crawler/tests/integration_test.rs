@@ -4,7 +4,7 @@
 // robots.txt parsing, and BFS crawl simulation. All tests are pure
 // (no network access required).
 
-use concurrent_crawler::*;
+use concurrent_crawler::solution::*;
 
 // ============================================================================
 // CRAWLER CONFIG TESTS

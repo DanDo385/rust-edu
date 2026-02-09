@@ -3,7 +3,7 @@
 //! Tests verify trait implementations, generic functions with trait bounds,
 //! default methods, dynamic dispatch, and Display implementations.
 
-use traits_interfaces_alternative::*;
+use traits_interfaces_alternative::solution::*;
 
 // ============================================================================
 // DESCRIBE TRAIT TESTS

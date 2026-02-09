@@ -66,22 +66,10 @@ use std::cmp::Ordering;
 /// - "medium" if 11 <= n <= 100
 /// - "large" if n > 100
 pub fn classify_number(n: i32) -> &'static str {
-    // **From the borrow checker's perspective:**
-    // - n: i32 is passed by value (small type, gets copied)
-    // - Ownership is not relevant here (i32 is Copy)
-    // - No references, no borrowing needed
-
-    match n {
-        0 => "zero",
-        n if n < 0 => "negative",      // Pattern guard: condition on n
-        1..=10 => "small",              // Range: includes 1 through 10
-        11..=100 => "medium",           // Range: includes 11 through 100
-        _ => "large",                   // Catch-all: all remaining values
-    }
-    // **What Rust prevents here:**
-    // If we forgot the `_` arm, Rust would ERROR: "match is not exhaustive"
-    // This forces us to handle ALL possible values.
-    // In C/C++, a missed case would silently return garbage.
+    // TODO: Classify n with exhaustive match arms and guards.
+    // Hint: 0 => "zero", n if n < 0 => "negative", 1..=10 => "small", 11..=100 => "medium".
+    let _ = n;
+    todo!("Classify n using match patterns and a catch-all arm")
 }
 
 /// Determines whether a guess is too small, too big, or correct.
@@ -110,16 +98,10 @@ pub fn classify_number(n: i32) -> &'static str {
 /// assert_eq!(compare_guess(5, 5), Ordering::Equal);
 /// ```
 pub fn compare_guess(guess: i32, secret: i32) -> Ordering {
-    // **From the borrow checker's perspective:**
-    // - Both guess and secret are i32 (Copy types, passed by value)
-    // - The & in cmp(&secret) is an immutable borrow of the parameter
-    // - Safe because we only READ secret, never MODIFY it
-    // - After this function, the caller still owns both values (unchanged)
-    guess.cmp(&secret)
-    // **Why use cmp() instead of if/else?**
-    // - cmp() returns Ordering directly - our return type
-    // - Shorter and clearer intent: "compare these values"
-    // - Less chance for bugs (can't accidentally forget a case)
+    // TODO: Return Less/Equal/Greater based on guess vs secret.
+    // Hint: `cmp` already returns `Ordering`.
+    let _ = (guess, secret);
+    todo!("Compare guess and secret with cmp")
 }
 
 /// Describes a number in different categories.
@@ -148,29 +130,10 @@ pub fn compare_guess(guess: i32, secret: i32) -> Ordering {
 /// assert_eq!(describe_number(3), "odd");
 /// ```
 pub fn describe_number(n: i32) -> &'static str {
-    // **From the borrow checker's perspective:**
-    // - n: i32 is passed by value (copied, it's small)
-    // - No references, no borrowing
-    // - Each branch returns a &'static str (constant data in binary)
-
-    if n == 0 {
-        "zero"
-    } else if n == 1 {
-        "one"
-    } else if n < 0 {
-        "negative"
-    } else if n % 2 == 0 {
-        // n % 2: Modulo operator gets the remainder
-        // If remainder is 0, the number is even
-        "even"
-    } else {
-        // If we reach here: n > 1 and n is not divisible by 2
-        "odd"
-    }
-    // **Why if/else vs match?**
-    // - if/else works well for simple binary conditions
-    // - match is better for complex patterns or exhaustive cases
-    // - Both compile to the same efficient code
+    // TODO: Return "negative", "zero", "one", "even", or "odd".
+    // Hint: Use modulo (`% 2`) to distinguish even from odd.
+    let _ = n;
+    todo!("Describe number categories with if/else")
 }
 
 /// Validates and parses a guess from a string.
@@ -204,34 +167,10 @@ pub fn describe_number(n: i32) -> &'static str {
 /// }
 /// ```
 pub fn validate_guess(input: &str) -> Result<i32, String> {
-    // **From the borrow checker's perspective:**
-    // - input: &str is borrowed (we don't own it)
-    // - trim() returns another &str (still borrowed from input)
-    // - parse() is a method on &str that returns Result<i32, ParseIntError>
-    // - We transform the error into our own String message
-
-    let trimmed = input.trim();  // Borrowed reference to trimmed string
-
-    match trimmed.parse::<i32>() {
-        Ok(num) => {
-            // Success! We have a number.
-            // Check bounds: valid range is 1-100
-            if num < 1 || num > 100 {
-                Err(format!("Guess must be between 1 and 100, got {}", num))
-            } else {
-                Ok(num)
-            }
-        }
-        Err(_) => {
-            // Parse failed. We ignore the ParseIntError and create our own message.
-            // The _ means "we don't care about the error details"
-            Err(format!("'{}' is not a valid number", trimmed))
-        }
-    }
-    // **What Rust prevents here:**
-    // - If you ignore the Result without handling both Ok/Err, the compiler errors!
-    // - In languages like JavaScript, parse errors often silently return NaN
-    // - Rust forces explicit error handling - safer code!
+    // TODO: Trim, parse, and validate range 1..=100.
+    // Hint: Return `Err(String)` for parse failures and out-of-range values.
+    let _ = input;
+    todo!("Validate user input into a bounded integer guess")
 }
 
 /// Counts how many times you can divide a number by 2 before it becomes odd.
@@ -255,31 +194,10 @@ pub fn validate_guess(input: &str) -> Result<i32, String> {
 /// assert_eq!(count_divisions(16), 4);  // 16 / 2 / 2 / 2 / 2 = 1 (4 divisions)
 /// ```
 pub fn count_divisions(mut n: i32) -> u32 {
-    // **From the borrow checker's perspective:**
-    // - n: i32 is passed by value (copied, caller still has their copy)
-    // - mut n means we can MODIFY our local copy
-    // - count is a mutable variable (mutable binding)
-    // - When function ends, our copy of n is dropped (no cleanup needed for i32)
-
-    let mut count = 0u32;  // Mutable variable to track divisions
-
-    // While n is divisible by 2 (is even)
-    while n % 2 == 0 {
-        n /= 2;        // Divide n by 2
-        count += 1;    // Increment counter
-    }
-
-    count  // Return the count of divisions
-
-    // **Why mut here?**
-    // - n needs to change: n /= 2 requires mut
-    // - count needs to change: count += 1 requires mut
-    // - Rust makes this explicit (unlike languages where all variables are mutable by default)
-    //
-    // **Why pass by value and then mutate?**
-    // - We only need to modify our local copy
-    // - Caller doesn't care about the modified value (we return count, not n)
-    // - This is safer than using &mut (which would require the caller to give up control)
+    // TODO: Count repeated divisions by 2 until n is odd.
+    // Hint: Use a `while n % 2 == 0` loop and increment a counter.
+    let _ = &mut n;
+    todo!("Count powers of two in n")
 }
 
 /// Sums all numbers in a range using a for loop.
@@ -307,34 +225,10 @@ pub fn count_divisions(mut n: i32) -> u32 {
 /// # Hint
 /// Use `start..=end` to create an inclusive range you can iterate over.
 pub fn sum_range(start: i32, end: i32) -> i32 {
-    // **From the borrow checker's perspective:**
-    // - start, end: i32 are passed by value (copied, caller keeps theirs)
-    // - sum: i32 is a mutable local variable
-    // - The for loop binds i to each value (immutable by default)
-    // - When function ends, all local variables are dropped
-
-    let mut sum = 0;
-
-    // start..=end is an INCLUSIVE range (includes both start and end)
-    // Examples:
-    //   1..=5   = [1, 2, 3, 4, 5]
-    //   5..=5   = [5]
-    //   5..=4   = [] (empty range, loop doesn't run)
-    for i in start..=end {
-        sum += i;  // Add each value to the accumulator
-    }
-
-    sum  // Return the accumulated sum
-
-    // **Why for loop on ranges?**
-    // - Idiomatic Rust for iterating over known sequences
-    // - Can't accidentally skip or repeat elements
-    // - No manual index management (no off-by-one errors)
-    //
-    // **What if start > end?**
-    // - The range is empty, the loop never runs
-    // - sum remains 0 (the neutral element for addition)
-    // - No error, no undefined behavior - just the expected result!
+    // TODO: Sum all integers from start through end (inclusive).
+    // Hint: `for i in start..=end { ... }`.
+    let _ = (start, end);
+    todo!("Compute inclusive range sum")
 }
 
 /// Decides the next action based on user input and game state.
@@ -362,30 +256,10 @@ pub fn sum_range(start: i32, end: i32) -> i32 {
 /// assert_eq!(decide_action("continue", true), "exiting game");
 /// ```
 pub fn decide_action(input: &str, game_won: bool) -> &'static str {
-    // **From the borrow checker's perspective:**
-    // - input: &str is borrowed (read-only reference)
-    // - game_won: bool is passed by value (1 byte, trivial to copy)
-    // - We're only READING these, never MODIFYING them
-    // - After this function, caller still owns and can use both values
-
-    match (input, game_won) {
-        // Tuple pattern: match on both values at once
-        ("quit", _) => "exiting game",        // Quit always means exit (ignore game_won with _)
-        (_, true) => "exiting game",          // If game_won, exit regardless of input
-        ("continue", false) => "continuing game",  // Continue only if haven't won
-        _ => "invalid command, please try again",  // Everything else is invalid
-    }
-
-    // **Why match (input, game_won)?**
-    // - We're matching on TWO conditions simultaneously
-    // - Tuple patterns let us handle all combinations clearly
-    // - More readable than nested if/else statements
-    //
-    // **What about the underscore (_)?**
-    // - _ means "I don't care about this value"
-    // - In ("quit", _): We accept any game_won value when input is "quit"
-    // - In (_, true): We accept any input when game_won is true
-    // - Safety: Compiler ensures we handle ALL possible (input, game_won) pairs
+    // TODO: Use tuple matching on (input, game_won) to choose an action.
+    // Hint: prioritize exiting when input == "quit" or game_won is true.
+    let _ = (input, game_won);
+    todo!("Decide action from command and game state")
 }
 
 pub mod solution;

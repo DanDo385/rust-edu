@@ -4,7 +4,7 @@
 // requiring a windowing system, GPU, or display. The entire model is
 // framework-independent and fully testable.
 
-use gui_egui::MyApp;
+use gui_egui::solution::MyApp;
 
 // ============================================================================
 // DEFAULT / INITIALIZATION TESTS
